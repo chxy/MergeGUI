@@ -1,15 +1,22 @@
+##' obtain the intersection of a list
+##'
+##'
+##' @param vname a
+##' @param simplifiedname a
+##' @return The outputs are 'public', 'individual', 'uniq', and
+##' 'simpleuniq'.  'public' is a vector of the intersection of
+##' 'simplifiedname'.  'individual' is a matrix with the original
+##' colnames matched to 'public' in all files.  'simpleuniq' is a list
+##' of the left part of 'simplifiedname' if we pick 'public' out.
+##' 'uniq' is a list of the left part of 'vname' if we pick
+##' 'individual' out.
+##' @author Xiaoyue Cheng
+##' @export
+##' @examples ## TODO
 intersect2 = function(vname, simplifiedname) {
     #####---------------------------------------------------------------#####
-    ##  intersect2 is a function to obtain the intersection of a list.     ##
+    ##  intersect2 is a function to .     ##
     ##  The inputs are both vname and simplifiedname, which are matched.   ##
-    ##  The outputs are 'public', 'individual', 'uniq', and 'simpleuniq'.  ##
-    ##  'public' is a vector of the intersection of 'simplifiedname'.      ##
-    ##  'individual' is a matrix with the original colnames                ##
-	##          matched to 'public' in all files.                          ##
-    ##  'simpleuniq' is a list of the left part of 'simplifiedname'        ##
-	##          if we pick 'public' out.                                   ##
-    ##  'uniq' is a list of the left part of 'vname'                       ##
-	##          if we pick 'individual' out.                               ##
     #####---------------------------------------------------------------#####
 
         s = as.vector(simplifiedname[[1]])
@@ -36,11 +43,15 @@ intersect2 = function(vname, simplifiedname) {
         return(list(public = s, individual = v1, uniq = v2, simpleuniq = v3))
     }
 
-
+##' Function to short the names from a template.
+##'
+##'
+##' @param namevector a
+##' @return varclass
+##' @author Xiaoyue Cheng
+##' @export
+##' @examples ## TODO
 simplifynames=function(namevector) {
-	#####------------------------------------------#####
-	##  Function to short the names from a template.  ##
-	#####------------------------------------------#####
 		n=max(nchar(namevector))
 		for (i in 1:n){
 			if (!all(substr(namevector,i,i)==substr(namevector,i,i)[1])){
@@ -51,12 +62,20 @@ simplifynames=function(namevector) {
 		return(namevector)
 	}
 
+##' a function to detect the type of the variables.
+##'
+##'
+##' @param nametable.class a
+##' @param dataset.class a
+##' @return a vector matching the rows of 'nametable'. The value
+##' includes NA if any variable are only NA's.
+##' @author Xiaoyue Cheng
+##' @export
+##' @examples ## TODO
 var.class = function(nametable.class, dataset.class) {
     #####----------------------------------------------------------#####
-    ##  var.class is a function to detect the type of the variables.  ##
-	##  The value of this function is a vector                        ##
-	##          matching the rows of 'nametable'.                     ##
-	##  The value includes NA if any variable are only NA's.          ##
+    ##  var.class is   ##
+	##  The value of this function is           ##
     #####----------------------------------------------------------#####
         varclass = rep("NA", nrow(nametable.class))
         for (i in 1:nrow(nametable.class)) {
@@ -75,24 +94,17 @@ var.class = function(nametable.class, dataset.class) {
         return(varclass)
     }
 
-weightmean = function(dat, group) {
-	#####---------------------------------------#####
-	##  weightmean is a function to calculate      ##
-	##          the weighted mean,                 ##
-	##  which is useful in computing               ##
-	##          misclassification error rate,      ##
-	##  when the sample sizes in different groups  ##
-	##          are quite different.               ##
-    #####---------------------------------------#####
-		x = 1/table(group)
-		weight = c()
-		for (i in 1:length(group)){
-			weight[i] = x[as.character(group[i])]
-		}
-		res = sum(dat*weight)/sum(weight)
-		return(res)
-	}
 
+##' function
+##'
+##'
+##' @param nametable.class a
+##' @param dataset.class a
+##' @param name.class a
+##' @return NULL
+##' @author Xiaoyue Cheng
+##' @export
+##' @examples ## TODO
 scale.rpart = function(nametable.class, dataset.class, name.class) {
 		txtpb = txtProgressBar(min=0,max=1,width = 100,style=3)
 	    varclass = var.class(nametable.class,dataset.class)
@@ -133,7 +145,8 @@ scale.rpart = function(nametable.class, dataset.class, name.class) {
 		res = rep(9, nrow(nametable.class))
 		for (i in 2:ncol(mergedata)) {
 			fit_rpart = rpart(mergedata$source~mergedata[,i], control=c(maxdepth=1))
-			tmperror = weightmean(residuals(fit_rpart), mergedata$source)
+                        group = mergedata$source
+			tmperror = weighted.mean(residuals(fit_rpart), 1/table(group)[group])
 			res[name.class==colnames(mergedata)[i]] = round(tmperror,3)
 			if (tmperror==0){
 				if (all(is.na(mergedata[fit_rpart$where==2,i])) |
@@ -147,6 +160,16 @@ scale.rpart = function(nametable.class, dataset.class, name.class) {
 		return(as.character(res))
             }
 
+##' function
+##'
+##'
+##' @param nametable.class a
+##' @param dataset.class a
+##' @param name.class a
+##' @return NULL
+##' @author Xiaoyue Cheng
+##' @export
+##' @examples ## TODO
 scale.kstest = function(nametable.class, dataset.class, name.class) {
 		txtpb = txtProgressBar(min=0,max=1,width = 100,style=3)
 	    varclass = var.class(nametable.class,dataset.class)
@@ -194,7 +217,16 @@ scale.kstest = function(nametable.class, dataset.class, name.class) {
 		setTxtProgressBar(txtpb, 1)
 		return(as.character(round(scaleclass,3)))
 	}
-
+##' function
+##'
+##'
+##' @param nametable.class a
+##' @param dataset.class a
+##' @param name.class a
+##' @return NULL
+##' @author Xiaoyue Cheng
+##' @export
+##' @examples ## TODO
 scale.missing = function(nametable.class, dataset.class, name.class) {
 		txtpb = txtProgressBar(min=0,max=1,width = 100,style=3)
 		rows = unlist(lapply(dataset.class, nrow))
@@ -229,6 +261,13 @@ scale.missing = function(nametable.class, dataset.class, name.class) {
 		return(as.character(round(missingclass,3)))
 	}
 
+##' function
+##'
+##'
+##' @return NULL
+##' @author Xiaoyue Cheng
+##' @export
+##' @examples ## TODO
 mergeGUI = function() {
 	mergegui_env = new.env()
 
