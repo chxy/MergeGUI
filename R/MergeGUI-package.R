@@ -4,6 +4,7 @@
 ##' @aliases MergeGUI
 ##' @docType package
 ##' @exportPattern "^[^\\.]"
+##' @import ggplot2 cairoDevice rpart
 ##' @author Xiaoyue Cheng \email{xycheng@@iastate.edu}
 ##'
 NULL

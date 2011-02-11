@@ -6,5 +6,6 @@ Date: 2011-02-11
 Author: Xiaoyue Cheng
 Maintainer: Xiaoyue Cheng <xycheng@iastate.edu>
 Description: A GUI for merging datasets in R using gWidgets.
-Imports: ggplot2, gWidgetsRGtk2, cairoDevice, rpart
+Depends: gWidgetsRGtk2
+Imports: ggplot2, cairoDevice, rpart
 License: GPL
