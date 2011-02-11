@@ -1284,8 +1284,8 @@ mergeID = function(h, ...) {
 	gt <- gtable(f.list, multiple = T, container = group,
 		expand = T)
 	gb1 <- gbutton("Open", container = group, handler = function(h,
-		...) gt[, ] = na.omit(rbind(gt[, , drop = FALSE], matrix(if (Sys.info()["sysname"] ==
-		"Darwin") file.choose() else choose.files(), dimnames = list(NULL,
+		...) gt[, ] = na.omit(rbind(gt[, , drop = FALSE], matrix(if (.Platform$OS.type != 'windows')
+                                                   file.choose() else choose.files(), dimnames = list(NULL,
 		"File")))))
 	gb2 <- gbutton("Match the Variables", container = group,
 		handler = mergefunc)
