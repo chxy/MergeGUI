@@ -1,12 +1,4 @@
-require(utils)
-require(ggplot2)
-require(gWidgets)
-require(gWidgetsRGtk2)
-require(cairoDevice)
-options(guiToolkit = "RGtk2")
-require(rpart)
-
-    intersect2 = function(vname, simplifiedname) {    
+intersect2 = function(vname, simplifiedname) {
     #####---------------------------------------------------------------#####
     ##  intersect2 is a function to obtain the intersection of a list.     ##
     ##  The inputs are both vname and simplifiedname, which are matched.   ##
@@ -31,9 +23,9 @@ require(rpart)
             for (i in 1:length(vname)) {
                 for (j in 1:length(s)) {
                   if (s[j] %in% simplifiedname[[i]]) {
-                    v1[j, i] = vname[[i]][which(simplifiedname[[i]] == 
+                    v1[j, i] = vname[[i]][which(simplifiedname[[i]] ==
                       s[j])[1]]
-                    tmp = vname[[i]][-which(simplifiedname[[i]] == 
+                    tmp = vname[[i]][-which(simplifiedname[[i]] ==
                       s[j])[1]]
                     v2[[i]] = intersect(v2[[i]], tmp)
                     v3[[i]] = v3[[i]][-which(v3[[i]] == s[j])[1]]
@@ -43,8 +35,9 @@ require(rpart)
         }
         return(list(public = s, individual = v1, uniq = v2, simpleuniq = v3))
     }
-    
-	simplifynames=function(namevector){
+
+
+simplifynames=function(namevector) {
 	#####------------------------------------------#####
 	##  Function to short the names from a template.  ##
 	#####------------------------------------------#####
@@ -57,32 +50,32 @@ require(rpart)
 		}
 		return(namevector)
 	}
-	
-    var.class = function(nametable.class, dataset.class) {
+
+var.class = function(nametable.class, dataset.class) {
     #####----------------------------------------------------------#####
     ##  var.class is a function to detect the type of the variables.  ##
 	##  The value of this function is a vector                        ##
 	##          matching the rows of 'nametable'.                     ##
 	##  The value includes NA if any variable are only NA's.          ##
-    #####----------------------------------------------------------#####  
+    #####----------------------------------------------------------#####
         varclass = rep("NA", nrow(nametable.class))
         for (i in 1:nrow(nametable.class)) {
             notNAcolset = which(!is.na(nametable.class[i, ]))
             notNAcol = NA
             for (k in notNAcolset) {
-                if (sum(!is.na(dataset.class[[k]][, nametable.class[i, 
-                  k]])) > 0) 
+                if (sum(!is.na(dataset.class[[k]][, nametable.class[i,
+                  k]])) > 0)
                   notNAcol = k
             }
             if (!is.na(notNAcol)) {
-                varclass[i] = class(dataset.class[[notNAcol]][, 
+                varclass[i] = class(dataset.class[[notNAcol]][,
                   nametable.class[i, notNAcol]])
             }
         }
         return(varclass)
     }
 
-	weightmean = function(dat, group) {
+weightmean = function(dat, group) {
 	#####---------------------------------------#####
 	##  weightmean is a function to calculate      ##
 	##          the weighted mean,                 ##
@@ -99,8 +92,8 @@ require(rpart)
 		res = sum(dat*weight)/sum(weight)
 		return(res)
 	}
-	
-	scale.rpart = function(nametable.class, dataset.class, name.class) {
+
+scale.rpart = function(nametable.class, dataset.class, name.class) {
 		txtpb = txtProgressBar(min=0,max=1,width = 100,style=3)
 	    varclass = var.class(nametable.class,dataset.class)
 		rows = unlist(lapply(dataset.class, nrow))
@@ -109,12 +102,12 @@ require(rpart)
         colnames(mergedata) = c("source", name.class[selectedvariables])
 		setTxtProgressBar(txtpb, 0.1)
         for (i in 1:length(dataset.class)) {
-            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]), 
+            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]),
                 rep(NA, rows[i] * length(selectedvariables))), nrow = rows[i])
             colnames(tmp) = c("source", nametable.class[selectedvariables, i])
-            tmp[, na.omit(nametable.class[selectedvariables, i])] = as.matrix(dataset.class[[i]])[, 
+            tmp[, na.omit(nametable.class[selectedvariables, i])] = as.matrix(dataset.class[[i]])[,
                 na.omit(nametable.class[selectedvariables, i])]
-            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i], 
+            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
                 ] = tmp
         }
 		setTxtProgressBar(txtpb, 0.2)
@@ -136,7 +129,7 @@ require(rpart)
 		#scaleclass = round(as.data.frame(fit_rpart$splits)[name.class,'improve'],2)
 		#scaleclass[is.na(scaleclass)] = ''
 		#return(scaleclass)
-		
+
 		res = rep(9, nrow(nametable.class))
 		for (i in 2:ncol(mergedata)) {
 			fit_rpart = rpart(mergedata$source~mergedata[,i], control=c(maxdepth=1))
@@ -152,9 +145,9 @@ require(rpart)
 		}
 		setTxtProgressBar(txtpb, 1)
 		return(as.character(res))
-	}
+            }
 
-	scale.kstest = function(nametable.class, dataset.class, name.class) {
+scale.kstest = function(nametable.class, dataset.class, name.class) {
 		txtpb = txtProgressBar(min=0,max=1,width = 100,style=3)
 	    varclass = var.class(nametable.class,dataset.class)
 		rows = unlist(lapply(dataset.class, nrow))
@@ -163,12 +156,12 @@ require(rpart)
         colnames(mergedata) = c("source", name.class[selectedvariables])
 		setTxtProgressBar(txtpb, 0.05)
         for (i in 1:length(dataset.class)) {
-            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]), 
+            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]),
                 rep(NA, rows[i] * length(selectedvariables))), nrow = rows[i])
             colnames(tmp) = c("source", nametable.class[selectedvariables, i])
-            tmp[, na.omit(nametable.class[selectedvariables, i])] = as.matrix(dataset.class[[i]])[, 
+            tmp[, na.omit(nametable.class[selectedvariables, i])] = as.matrix(dataset.class[[i]])[,
                 na.omit(nametable.class[selectedvariables, i])]
-            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i], 
+            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
                 ] = tmp
         }
 		setTxtProgressBar(txtpb, 0.1)
@@ -177,7 +170,7 @@ require(rpart)
         mergedata[,2:ncol(mergedata)]=sapply(mergedata[,2:ncol(mergedata)],
 			function(avec){as.numeric(as.character(avec))})
 		setTxtProgressBar(txtpb, 0.15)
-		
+
 		kstestout = c()
 		scaleclass = rep(9, nrow(nametable.class))
 		for (i in 2:ncol(mergedata)) {
@@ -202,24 +195,24 @@ require(rpart)
 		return(as.character(round(scaleclass,3)))
 	}
 
-	scale.missing = function(nametable.class, dataset.class, name.class) {
+scale.missing = function(nametable.class, dataset.class, name.class) {
 		txtpb = txtProgressBar(min=0,max=1,width = 100,style=3)
 		rows = unlist(lapply(dataset.class, nrow))
 		mergedata = matrix(nrow = sum(rows), ncol = length(name.class) + 1)
         colnames(mergedata) = c("source", name.class)
         for (i in 1:length(dataset.class)) {
-            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]), 
+            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]),
                 rep(NA, rows[i] * length(name.class))), nrow = rows[i])
             colnames(tmp) = c("source", nametable.class[, i])
-            tmp[, na.omit(nametable.class[, i])] = as.matrix(dataset.class[[i]])[, 
+            tmp[, na.omit(nametable.class[, i])] = as.matrix(dataset.class[[i]])[,
                 na.omit(nametable.class[, i])]
-            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i], 
+            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
                 ] = tmp
         }
 		mergedata=as.data.frame(mergedata)
 		mergedata$source=factor(mergedata$source)
 		setTxtProgressBar(txtpb, 0.1)
-		
+
 		chi2testout = c()
 		missingclass = rep(9, nrow(nametable.class))
 		for (i in 2:ncol(mergedata)) {
@@ -235,11 +228,11 @@ require(rpart)
 		setTxtProgressBar(txtpb, 1)
 		return(as.character(round(missingclass,3)))
 	}
- 
+
 mergeGUI = function() {
 	mergegui_env = new.env()
-	
-mergefunc = function(h, ...){
+
+mergefunc = function(h, ...) {
 
     undo = function(h, ...) {
     #####-----------------------------------------------------#####
@@ -260,7 +253,7 @@ mergefunc = function(h, ...){
         gt5[, 2] <- gt4[, 2]
         gt5[, 3] <- gt4[, 3]
     }
-    
+
     redo = function(h, ...) {
     #####-----------------------------------------------------#####
 	##  The following buttons are used for switching variables.  ##
@@ -283,7 +276,7 @@ mergefunc = function(h, ...){
         gt5[, 2] <- gt4[, 2]
         gt5[, 3] <- gt4[, 3]
     }
-    
+
     reset = function(h, ...) {
     #####-----------------------------------------------------#####
 	##  The following buttons are used for switching variables.  ##
@@ -305,9 +298,9 @@ mergefunc = function(h, ...){
 	##  It gives a new window for                                 ##
 	##          editing the attributes of variables.              ##
     #####------------------------------------------------------#####
-        gt4input0 = gwindow("Attributes", visible = T, width = 300, 
+        gt4input0 = gwindow("Attributes", visible = T, width = 300,
             height = 200)
-        gt4input = ggroup(horizontal = FALSE, container = gt4input0, 
+        gt4input = ggroup(horizontal = FALSE, container = gt4input0,
             expand = TRUE)
         gt4input1 = ggroup(container = gt4input, expand = TRUE)
         gt4input2 = ggroup(container = gt4input, expand = TRUE)
@@ -315,11 +308,11 @@ mergefunc = function(h, ...){
         gt4input3 = ggroup(container = gt4input, expand = TRUE)
 
         gt4input11 = glabel("Name:", container = gt4input1)
-        gt4input12 = gedit(text = svalue(gt4), container = gt4input1, 
+        gt4input12 = gedit(text = svalue(gt4), container = gt4input1,
             expand = TRUE)
         gt4input21 = glabel("Class:", container = gt4input2)
-        gt4input22 = gcombobox(union(gt4[svalue(gt4, index = TRUE), 
-            3], c("integer", "numeric", "character", "factor")), 
+        gt4input22 = gcombobox(union(gt4[svalue(gt4, index = TRUE),
+            3], c("integer", "numeric", "character", "factor")),
             container = gt4input2, expand = TRUE, handler = function(h,...){
 			# if (svalue(gt4input22) %in% c('character','factor')) {
 				# svalue(gt4input41) = FALSE
@@ -332,8 +325,8 @@ mergefunc = function(h, ...){
 				# enabled(gt4input41) = TRUE
 			#}
 			})
-			
-		# gt4input41 = gcheckbox("Different scales", checked = 
+
+		# gt4input41 = gcheckbox("Different scales", checked =
 			# (gt4[svalue(gt4, index = TRUE),4]=='X'), container = gt4input4,
 			# expand = TRUE, handler = function(h,...){
 			# if (svalue(gt4input22) %in% c('integer','numeric')) {
@@ -352,12 +345,12 @@ mergefunc = function(h, ...){
 		# gt4input42group = gt4input42label = gt4input42edit = list()
 		# for (i in 1:n) {
 			# gt4input42group[[i]]=ggroup(container = gt4input42, expand = TRUE)
-			# gt4input42label[[i]]=glabel(sub('.csv','', basename(gtfile)[i]), 
+			# gt4input42label[[i]]=glabel(sub('.csv','', basename(gtfile)[i]),
 				# container = gt4input42group[[i]])
 			# gt4input42edit[[i]]=gedit(expand = TRUE, container = gt4input42group[[i]])
 		# }
-			
-        gt4input31 = gbutton("Ok", container = gt4input3, expand = TRUE, 
+
+        gt4input31 = gbutton("Ok", container = gt4input3, expand = TRUE,
             handler = function(h, ...) {
                 if (svalue(gt4input12) != "") {
                   gt4[svalue(gt4, index = TRUE), 2] = svalue(gt4input12)
@@ -377,7 +370,7 @@ mergefunc = function(h, ...){
                   gmessage("Variable name could not be empty!")
                 }
             })
-        gt4input32 = gbutton("Cancel", container = gt4input3, 
+        gt4input32 = gbutton("Cancel", container = gt4input3,
             expand = TRUE, handler = function(h, ...) {
                 dispose(gt4input0)
             })
@@ -387,10 +380,10 @@ mergefunc = function(h, ...){
 	#####---------------------------------#####
     ##  smmry is the handler of gbcombo431.  ##
 	##  (gbutton: Numeric Summary)           ##
-    #####---------------------------------#####        
-        graphics.off()       
+    #####---------------------------------#####
+        graphics.off()
         name.select = svalue(gt4, index = TRUE)
-		
+
         if (length(name.select) == 0) {
             gmessage("Please select the variables!")
             return()
@@ -404,27 +397,27 @@ mergefunc = function(h, ...){
         summarytable = list()
         for (i in 1:length(name.select)) {
             if (name.class[i] != "NA") {
-                if (name.class[i] == "numeric" | name.class[i] == 
+                if (name.class[i] == "numeric" | name.class[i] ==
                   "integer") {
-                  summarytable[[i]] = matrix(NA, ncol = n, nrow = 7, 
-                    dimnames = list(c("size", "NA#s", "mean", 
-                      "std", "min", "median", "max"), 
+                  summarytable[[i]] = matrix(NA, ncol = n, nrow = 7,
+                    dimnames = list(c("size", "NA#s", "mean",
+                      "std", "min", "median", "max"),
 					  simplifynames(gsub('.csv','',basename(gtfile)))))
                   names(summarytable)[i] = name.intersect[i]
                   for (j in 1:n) {
                     if (!is.na(name.table[i, j])) {
-                      tmpdata = dataset[[j]][, name.table[i, 
+                      tmpdata = dataset[[j]][, name.table[i,
                         j]]
                       summarytable[[i]][1, j] = length(tmpdata)
                       summarytable[[i]][2, j] = sum(is.na(tmpdata))
-                      summarytable[[i]][3, j] = mean(tmpdata, 
+                      summarytable[[i]][3, j] = mean(tmpdata,
                         na.rm = TRUE)
                       summarytable[[i]][4, j] = sd(tmpdata, na.rm = TRUE)
-                      summarytable[[i]][5, j] = min(tmpdata, 
+                      summarytable[[i]][5, j] = min(tmpdata,
                         na.rm = TRUE)
-                      summarytable[[i]][6, j] = median(tmpdata, 
+                      summarytable[[i]][6, j] = median(tmpdata,
                         na.rm = TRUE)
-                      summarytable[[i]][7, j] = max(tmpdata, 
+                      summarytable[[i]][7, j] = max(tmpdata,
                         na.rm = TRUE)
                     }
                   }
@@ -439,18 +432,18 @@ mergefunc = function(h, ...){
 				  summarytable[[i]] = cbind(File=rownames(summarytable[[i]]),summarytable[[i]])
                 }
                 else {
-                  summarytable[[i]] = matrix(NA, ncol = n, nrow = 10, 
-                    dimnames = list(c("size", "NA#s", "levels", 
-                      "matched levels", "top 1 level", "amount 1", 
+                  summarytable[[i]] = matrix(NA, ncol = n, nrow = 10,
+                    dimnames = list(c("size", "NA#s", "levels",
+                      "matched levels", "top 1 level", "amount 1",
                       "top 2 level", "amount 2", "top 3 level", "amount 3"),
                       simplifynames(gsub('.csv','',basename(gtfile)))))
                   names(summarytable)[i] = name.intersect[i]
                   matchedlevels = list()
                   for (j in 1:n) {
                     if (!is.na(name.table[i, j])) {
-                      if (sum(!is.na(dataset[[j]][, name.table[i, 
+                      if (sum(!is.na(dataset[[j]][, name.table[i,
                         j]])) > 0) {
-                        matchedlevels[[j]] = names(table(dataset[[j]][, 
+                        matchedlevels[[j]] = names(table(dataset[[j]][,
                           name.table[i, j]], useNA = "no"))
                       }
                       else {
@@ -464,9 +457,9 @@ mergefunc = function(h, ...){
                   mtch = intersect2(matchedlevels, matchedlevels)
                   for (j in 1:n) {
                     if (!is.na(name.table[i, j])) {
-                      tmpdata = dataset[[j]][, name.table[i, 
+                      tmpdata = dataset[[j]][, name.table[i,
                         j]]
-                      tmptable = sort(table(tmpdata, useNA = "no"), 
+                      tmptable = sort(table(tmpdata, useNA = "no"),
                         decreasing = TRUE)
                       summarytable[[i]][1, j] = length(tmpdata)
                       summarytable[[i]][2, j] = sum(is.na(tmpdata))
@@ -496,44 +489,44 @@ mergefunc = function(h, ...){
                 }
             }
             else {
-                summarytable[[i]] = matrix(NA, nrow = n, ncol = 1, 
+                summarytable[[i]] = matrix(NA, nrow = n, ncol = 1,
                   dimnames = list(simplifynames(gsub('.csv','',basename(gtfile))), NULL))
                 names(summarytable)[i] = name.intersect[i]
             }
         }
-        
+
 		gbcombo441 = list()
 
 			delete(group43, group45)
 			group45 <- ggroup(cont=group43,expand = TRUE, use.scrollwindow = TRUE)
 			gbcombo44 <- glayout(container = group45,expand = TRUE, use.scrollwindow = TRUE)
-		
+
 		for (i in 1:length(name.select)){
 			gbcombo44[i*2-1, 1] = glabel(names(summarytable)[i],cont=gbcombo44)
 			gbcombo44[i*2, 1, expand = TRUE] = gbcombo441[[i]] = gtable(summarytable[[i]], container = gbcombo44)
 		}
-		
+
     }
 
     graph = function(h, ...) {
     #####---------------------------------#####
     ##  graph is the handler of gbcombo432.  ##
 	##  (gbutton: Graphic Summary)           ##
-    #####---------------------------------#####        
+    #####---------------------------------#####
         graphics.off()
 			delete(group43, group45)
 			group45 <- ggroup(cont=group43,expand = TRUE, use.scrollwindow = TRUE)
 			gbcombo44 <- glayout(container = group45,expand = TRUE, use.scrollwindow = TRUE)
 		gbcombo44[1, 1, expand = TRUE] = gbcombo442 = ggroup(container = gbcombo44, use.scrollwindow = TRUE)
-		
-		yscale = svalue(radio121)		
+
+		yscale = svalue(radio121)
         name.select = svalue(gt4, index = TRUE)
         if (length(name.select) == 0) {
             gmessage("Please select one variables!")
             return()
         }
         if (length(name.select) > 1) {
-            gmessage("You selected more than one variable! 
+            gmessage("You selected more than one variable!
 				Only the first two numeric variables are shown.")
 			whichnumeric = gt4[name.select,3] %in% c('integer','numeric')
 			if (!any(whichnumeric)) {
@@ -546,7 +539,7 @@ mergefunc = function(h, ...){
 				}
 			}
         }
-		
+
 		if (length(name.select)==1) {
         name.table = rep(NA, n)
         for (i in 1:n) {
@@ -554,9 +547,9 @@ mergefunc = function(h, ...){
         }
         name.intersect = as.character(gt4[name.select,2])
         name.class = as.character(gt4[name.select, 3])
-        mergedata = data.frame(source = rep(simplifynames(gsub('.csv','',basename(gtfile))), 
+        mergedata = data.frame(source = rep(simplifynames(gsub('.csv','',basename(gtfile))),
             rows))
-        
+
         is.num = FALSE
         if (name.class != "NA") {
             if (name.class == "numeric" | name.class == "integer") {
@@ -577,39 +570,39 @@ mergefunc = function(h, ...){
                 tmp.chr = rep("na", sum(rows))
                 for (i in 1:n) {
                   if (!is.na(name.table[i])) {
-                    tmp.chr[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i]] = as.character(dataset[[i]][, 
+                    tmp.chr[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i]] = as.character(dataset[[i]][,
                       name.table[i]])
                   }
                   else {
-                    tmp.chr[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i]] = rep(NA, 
+                    tmp.chr[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i]] = rep(NA,
                       rows[i])
                   }
                 }
                 levelorder = names(sort(table(tmp.chr), decreasing = FALSE))
-                mergedata = cbind(mergedata, factor(tmp.chr, 
+                mergedata = cbind(mergedata, factor(tmp.chr,
                   levels = levelorder))
             }
         }
         else {
             mergedata = cbind(mergedata, rep(NA, sum(rows)))
         }
-        
 
-		gbcombo4421 = ggraphics(container = gbcombo442, 
+
+		gbcombo4421 = ggraphics(container = gbcombo442,
             height = ifelse(is.num, 75 * 3 * n, 75 * 6),  expand = TRUE)
-		
+
         colnames(mergedata) = c("source", name.intersect)
-		
+
 		if (yscale=="regular y scale") {
-			eval(parse(text = paste("print(qplot(", name.intersect, 
-				",data=mergedata,facets=", ifelse(is.num, 
+			eval(parse(text = paste("print(qplot(", name.intersect,
+				",data=mergedata,facets=", ifelse(is.num,
 				"source~.)", "~source)+coord_flip()"), ")", collapse = "")))
 		} else {
-			eval(parse(text = paste("print(qplot(", name.intersect, 
+			eval(parse(text = paste("print(qplot(", name.intersect,
 				",data=mergedata,geom='histogram')+facet_wrap(~source, scales = 'free_y', ncol = 1)",
 				ifelse(is.num, "", "+coord_flip()"), ")", collapse = "")))
 		}
-		} 
+		}
 		else {
 			name.table = matrix(NA, ncol=n, nrow=2)
 			for (i in 1:n) {
@@ -617,7 +610,7 @@ mergefunc = function(h, ...){
 			}
 			name.intersect = as.character(gt4[name.select,2])
 			name.class = as.character(gt4[name.select, 3])
-			mergedata = data.frame(source = rep(simplifynames(gsub('.csv','',basename(gtfile))), 
+			mergedata = data.frame(source = rep(simplifynames(gsub('.csv','',basename(gtfile))),
 				rows))
 			tmp.num = c()
 			for (j in 1:2) {
@@ -635,7 +628,7 @@ mergefunc = function(h, ...){
 			colnames(mergedata)[1]="source"
 			mergedata[,2:3] = sapply(mergedata[,2:3],function(avec){as.numeric(as.character(avec))})
 			mergedata$source = factor(mergedata$source)
-			gbcombo4421 = ggraphics(container = gbcombo442, 
+			gbcombo4421 = ggraphics(container = gbcombo442,
 				height = 75 * 3 * n,  expand = TRUE)
 			if (yscale=="regular y scale") {
 				eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],
@@ -651,18 +644,18 @@ mergefunc = function(h, ...){
     #####--------------------------------#####
     ##  dict is the handler of gbcombo432.  ##
 	##  (gbutton: Dictionary)               ##
-    #####--------------------------------#####        
+    #####--------------------------------#####
         graphics.off()
 			delete(group43, group45)
 			group45 <- ggroup(cont=group43,expand = TRUE, use.scrollwindow = TRUE)
 			gbcombo44 <- glayout(container = group45,expand = TRUE, use.scrollwindow = TRUE)
-        gbcombo44[1, 1, expand = TRUE] = gbcombo443 = gtext(container = gbcombo44, expand = TRUE, 
+        gbcombo44[1, 1, expand = TRUE] = gbcombo443 = gtext(container = gbcombo44, expand = TRUE,
 			use.scrollwindow = TRUE)
-        
+
         name.select = svalue(gt4, index = TRUE)
         if (length(name.select) == 0) {
             gmessage("Please select the variables!")
-            gbcombo443[, ] = data.frame(VarName = character(0), 
+            gbcombo443[, ] = data.frame(VarName = character(0),
                 Level = integer(0), Label = character(0), stringsAsFactors = FALSE)
             return()
         }
@@ -672,26 +665,26 @@ mergefunc = function(h, ...){
         }
         name.intersect = as.vector(svalue(gt4))
         name.class = gt4[name.select, 3]
-		
+
         dictionary = list()
-        dictlength = matrix(0, nrow = length(name.intersect), 
+        dictlength = matrix(0, nrow = length(name.intersect),
             ncol = n)
         for (i in 1:length(name.intersect)) {
             dictionary[[i]] = list()
             names(dictionary)[i] = name.intersect[i]
             if (name.class[i] == "factor") {
                 for (j in 1:n) {
-                  dictionary[[i]][[j]] = levels(factor(dataset[[j]][, 
+                  dictionary[[i]][[j]] = levels(factor(dataset[[j]][,
                     name.table[i, j]]))
                   dictlength[i, j] = length(dictionary[[i]][[j]])
                 }
             }
         }
-        
+
         dictlist = list()
         for (i in 1:length(name.intersect)) {
             if (max(dictlength[i, ]) != 0) {
-                dictlist[[i]] = matrix(NA, nrow = max(dictlength[i, 
+                dictlist[[i]] = matrix(NA, nrow = max(dictlength[i,
                   ]), ncol = n)
                 names(dictlist)[i] = name.intersect[i]
                 rownames(dictlist[[i]]) = 1:nrow(dictlist[[i]])
@@ -706,7 +699,7 @@ mergefunc = function(h, ...){
                 names(dictlist)[i] = name.intersect[i]
             }
         }
-        
+
         if (sum(dictlength) == 0) {
             gmessage("All the variables selected are not factor variables.")
             svalue(gbcombo443) = ""
@@ -719,22 +712,22 @@ mergefunc = function(h, ...){
 
 	change = function(h,...) {
 		flagsym = svalue(radio131)
-		
+
 		if (flagsym=="Do not show p-values or flags") {
 			newgt4 = gt4[,1:3]
 			delete(group42, gt4)
 			gt4 <- gtable(newgt4, multiple = T, container = group42, expand = TRUE, chosencol = 2)
 			return()
 		}
-		
+
 		if (!exists("name_intersection_panel")) {
 			mergegui_env$namepanel = nametable
 			for (i in 1:n) {
 				mergegui_env$namepanel[,i]<-gt2[[i]][,]
 			}
 			mergegui_env$nameintersection <- gt4[,2]
-			mergegui_env$name_intersection_panel <- data.frame(gt4[,], 
-				scale.rpart(mergegui_env$namepanel,dataset,mergegui_env$nameintersection), 
+			mergegui_env$name_intersection_panel <- data.frame(gt4[,],
+				scale.rpart(mergegui_env$namepanel,dataset,mergegui_env$nameintersection),
 				scale.kstest(mergegui_env$namepanel,dataset,mergegui_env$nameintersection),
 				scale.missing(mergegui_env$namepanel,dataset,mergegui_env$nameintersection),
 				stringsAsFactors = FALSE)
@@ -747,15 +740,15 @@ mergefunc = function(h, ...){
 			}
 			if (!all(checknamepanel)){
 				mergegui_env$nameintersection <- gt4[,2]
-				mergegui_env$name_intersection_panel<- data.frame(gt4[,], 
-					scale.rpart(mergegui_env$namepanel,dataset,mergegui_env$nameintersection), 
+				mergegui_env$name_intersection_panel<- data.frame(gt4[,],
+					scale.rpart(mergegui_env$namepanel,dataset,mergegui_env$nameintersection),
 					scale.kstest(mergegui_env$namepanel,dataset,mergegui_env$nameintersection),
 					scale.missing(mergegui_env$namepanel,dataset,mergegui_env$nameintersection),
 					stringsAsFactors = FALSE)
 			}
 		}
 		delete(group42, gt4)
-		
+
 		if (flagsym=="Show the flag symbol") {
 			flag1 = !is.na(gt4[,4:6])
 			flag2 = sapply(gt4[,4:6],function(avec){
@@ -772,21 +765,21 @@ mergefunc = function(h, ...){
 			newgt4[!flag[,1],4] <- ""
 			newgt4[!flag[,2],5] <- ""
 			newgt4[!flag[,3],6] <- ""
-			gt4 <- gtable(newgt4, multiple = T, container = group42, 
+			gt4 <- gtable(newgt4, multiple = T, container = group42,
 				expand = TRUE, chosencol = 2)
 		} else {
 			gt4 <- gtable(mergegui_env$name_intersection_panel, multiple = T,
 				container = group42, expand = TRUE, chosencol = 2)
 		}
-		
+
 	}
-	
+
     watchdatafunc = function(h, ...) {
 	#####-------------------------------------------------------#####
     ##  watchdatafunc is a function to export the merged dataset.  ##
     ##  For the selected checkboxs, we export the corresponding    ##
 	##          variables from all files.                          ##
-    ##  The public name for the selected variable is the shortest  ## 
+    ##  The public name for the selected variable is the shortest  ##
 	##          name of that variable among different files.       ##
     ##  mergedata is a matrix to save the merged dataset.          ##
     ##  We should write 'xxx.csv'                                  ##
@@ -804,43 +797,43 @@ mergefunc = function(h, ...){
         }
         name.intersect = as.vector(svalue(gt5))
         name.class = gt5[name.select, 3]
-        mergedata = matrix(nrow = sum(rows), ncol = nrow(name.table) + 
+        mergedata = matrix(nrow = sum(rows), ncol = nrow(name.table) +
             1)
         colnames(mergedata) = c("source", name.intersect)
 		setTxtProgressBar(txtpb, 0.05)
         for (i in 1:n) {
-            tmp = matrix(c(rep(basename(gtfile[i]), rows[i]), 
+            tmp = matrix(c(rep(basename(gtfile[i]), rows[i]),
                 rep(NA, rows[i] * nrow(name.table))), nrow = rows[i])
             colnames(tmp) = c("source", name.table[, i])
-            tmp[, na.omit(name.table[, i])] = as.matrix(dataset[[i]])[, 
+            tmp[, na.omit(name.table[, i])] = as.matrix(dataset[[i]])[,
                 na.omit(name.table[, i])]
-            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i], 
+            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
                 ] = tmp
 			setTxtProgressBar(txtpb, (0.05+0.4*i/n))
         }
-		
-        mergedatasummary = matrix(c(basename(gtfile), rows), 
-            nrow = n, dimnames = list(basename(gtfile), c("source", 
+
+        mergedatasummary = matrix(c(basename(gtfile), rows),
+            nrow = n, dimnames = list(basename(gtfile), c("source",
                 "size")))
         for (i in 1:length(name.select)) {
             if (name.class[i] != "NA") {
-                if (name.class[i] == "numeric" | name.class[i] == 
+                if (name.class[i] == "numeric" | name.class[i] ==
                   "integer") {
                   if (name.class[i] == "numeric") {
-                    mergedata[, i + 1] = as.numeric(mergedata[, 
+                    mergedata[, i + 1] = as.numeric(mergedata[,
                       i + 1])
                   }
                   if (name.class[i] == "integer") {
-                    mergedata[, i + 1] = as.integer(mergedata[, 
+                    mergedata[, i + 1] = as.integer(mergedata[,
                       i + 1])
                   }
-                  datasummary = matrix(NA, nrow = n, ncol = 6, 
-                    dimnames = list(basename(gtfile), paste(name.intersect[i], 
-                      c("NA#s", "mean", "std", "min", "median", 
+                  datasummary = matrix(NA, nrow = n, ncol = 6,
+                    dimnames = list(basename(gtfile), paste(name.intersect[i],
+                      c("NA#s", "mean", "std", "min", "median",
                         "max"), sep = ".")))
                   for (j in 1:n) {
                     if (!is.na(name.table[i, j])) {
-                      tmpdata = dataset[[j]][, name.table[i, 
+                      tmpdata = dataset[[j]][, name.table[i,
                         j]]
                       datasummary[j, 1] = sum(is.na(tmpdata))
                       datasummary[j, 2] = mean(tmpdata, na.rm = TRUE)
@@ -851,21 +844,21 @@ mergefunc = function(h, ...){
                     }
 					#setTxtProgressBar(txtpb, 0.45+(i-1)/n*0.5+j/n*0.5/n)
                   }
-                  mergedatasummary = cbind(mergedatasummary, 
+                  mergedatasummary = cbind(mergedatasummary,
                     datasummary)
                 }
                 else {
-                  datasummary = matrix(NA, nrow = n, ncol = 9, 
-                    dimnames = list(basename(gtfile), paste(name.intersect[i], 
-                      c("NA#s", "levels", "matched_levels", "top1_level", 
-                        "amount_1", "top2_level", "amount_2", 
+                  datasummary = matrix(NA, nrow = n, ncol = 9,
+                    dimnames = list(basename(gtfile), paste(name.intersect[i],
+                      c("NA#s", "levels", "matched_levels", "top1_level",
+                        "amount_1", "top2_level", "amount_2",
                         "top3_level", "amount_3"), sep = ".")))
                   matchedlevels = list()
                   for (j in 1:n) {
                     if (!is.na(name.table[i, j])) {
-                      if (sum(!is.na(dataset[[j]][, name.table[i, 
+                      if (sum(!is.na(dataset[[j]][, name.table[i,
                         j]])) > 0) {
-                        matchedlevels[[j]] = names(table(dataset[[j]][, 
+                        matchedlevels[[j]] = names(table(dataset[[j]][,
                           name.table[i, j]], useNA = "no"))
                       }
                       else {
@@ -880,9 +873,9 @@ mergefunc = function(h, ...){
                   mtch = intersect2(matchedlevels, matchedlevels)
                   for (j in 1:n) {
                     if (!is.na(name.table[i, j])) {
-                      tmpdata = dataset[[j]][, name.table[i, 
+                      tmpdata = dataset[[j]][, name.table[i,
                         j]]
-                      tmptable = sort(table(tmpdata, useNA = "no"), 
+                      tmptable = sort(table(tmpdata, useNA = "no"),
                         decreasing = TRUE)
                       datasummary[j, 1] = sum(is.na(tmpdata))
                       datasummary[j, 2] = length(tmptable)
@@ -900,17 +893,17 @@ mergefunc = function(h, ...){
                     }
 					#setTxtProgressBar(txtpb, 0.45+(i-0.5)/n*0.5+j/n*0.25/n)
                   }
-                  mergedatasummary = cbind(mergedatasummary, 
+                  mergedatasummary = cbind(mergedatasummary,
                     datasummary)
                 }
             }
             else {
-                mergedatasummary = cbind(mergedatasummary, matrix(NA, 
+                mergedatasummary = cbind(mergedatasummary, matrix(NA,
                   ncol = 1, nrow = n, dimnames = list(NULL, name.intersect[i])))
             }
 			setTxtProgressBar(txtpb, 0.45+i/n*0.5)
         }
-        
+
         setTxtProgressBar(txtpb, 1)
         if (!is.na(gf <- gfile(type = "save"))) {
 			if (regexpr("\\.csv$",gf) %in% c(-1,1)) {
@@ -918,7 +911,7 @@ mergefunc = function(h, ...){
 			}
             write.csv(mergedata, file = gf, row.names = F)
             summarylocation = sub("\\.csv$", "_summary.csv", gf)
-            write.csv(mergedatasummary, file = summarylocation, 
+            write.csv(mergedatasummary, file = summarylocation,
                 row.names = F)
             gmessage("The files are merged!")
         }
@@ -942,7 +935,7 @@ mergefunc = function(h, ...){
 	#	"E:\\study\\2010 Fall\\research\\Novartis\\health\\brfss09std.csv")
 	# gt = c("E:\\study\\2010 Fall\\research\\Novartis\\oil spill\\Brooks-McCall Cruise01 05-08-2010_QC 2010132.csv",
 	#   "E:\\study\\2010 Fall\\research\\Novartis\\oil spill\\Brooks-McCall Cruise02 05-15-2010_QC 2010138.csv")
-	
+
     if (length(svalue(gt)) == 0) {
         n <- length(gt[])
         gtfile <- gt[]
@@ -950,7 +943,7 @@ mergefunc = function(h, ...){
         n <- length(svalue(gt))
         gtfile <- svalue(gt)
     }
-	
+
 	rows <- rep(0, n)
 	if (n<2) {
 	    warning('The input data set is not enough. More files are needed.')
@@ -992,20 +985,20 @@ mergefunc = function(h, ...){
     tmpsimpleuniq = a$simpleuniq
     nametable <- a$individual
     if (nrow(nametable) != 0) {
-        rownames(nametable) <- paste("Part1-1-", 1:nrow(nametable), 
+        rownames(nametable) <- paste("Part1-1-", 1:nrow(nametable),
             sep = "")
     }
-    
+
     for (i in max((n - 1), 2):2) {
         combnmatrix = combn(1:n, i)
         for (j in 1:ncol(combnmatrix)) {
-            tmpintersect = intersect2(tmpuniq[combnmatrix[, j]], 
+            tmpintersect = intersect2(tmpuniq[combnmatrix[, j]],
                 tmpsimpleuniq[combnmatrix[, j]])
             tmptable = matrix(NA, ncol = n, nrow = length(tmpintersect$public))
             tmptable[, combnmatrix[, j]] = tmpintersect$individual
             if (nrow(tmptable) != 0) {
-                rownames(tmptable) = paste("Part", n - i + 1, 
-                  "-", j, "-", 1:length(tmpintersect$public), 
+                rownames(tmptable) = paste("Part", n - i + 1,
+                  "-", j, "-", 1:length(tmpintersect$public),
                   sep = "")
             }
             nametable <- rbind(nametable, tmptable)
@@ -1015,45 +1008,45 @@ mergefunc = function(h, ...){
         }
     }
     nameintersect <- c(nameintersect, unlist(tmpuniq))
-    
+
     for (i in 1:n) {
         tmptable = matrix(NA, ncol = n, nrow = length(tmpuniq[[i]]))
         tmptable[, i] = tmpuniq[[i]]
         if (nrow(tmptable) != 0) {
-            rownames(tmptable) = paste("Part", n, "-", i, "-", 
+            rownames(tmptable) = paste("Part", n, "-", i, "-",
                 1:nrow(tmptable), sep = "")
         }
         nametable <- rbind(nametable, tmptable)
     }
     colnames(nametable) <- simplifynames(gsub('.csv','',basename(gtfile)))
-	
+
 	#####-------------------------------#####
     ##  New window for matching variables  ##
     #####-------------------------------#####
- 	combo2 = gwindow("Matched Variables", visible = T, width = 900, 
+ 	combo2 = gwindow("Matched Variables", visible = T, width = 900,
         height = 600)
     tab = gnotebook(container = combo2)
-	
+
 	#####----------------------------------------------#####
     ##  In the first tab we can:                          ##
     ##  (1) . ##
     ##  (2) .    ##
-    #####----------------------------------------------##### 
-	group11 = ggroup(horizontal = FALSE, cont = tab, label = "Preferences", 
+    #####----------------------------------------------#####
+	group11 = ggroup(horizontal = FALSE, cont = tab, label = "Preferences",
         expand = T)
     frame12 = gframe("Scaling of histograms",container = group11, horizontal = FALSE)
 	radio121 <- gradio(c("regular y scale","relative y scale"),container = frame12)
 	frame13 = gframe("Flag for variables",container = group11, horizontal = FALSE)
 	radio131 <- gradio(c("Do not show p-values or flags","Show p-values","Show the flag symbol"), container = frame13, handler=change)
-	
+
     #####----------------------------------------------#####
     ##  In the first tab we can:                          ##
     ##  (1) Switch the variable names in the same gtable. ##
     ##  (2) Go back or go forth or reset the matching.    ##
-    #####----------------------------------------------#####  
-    group21 = ggroup(horizontal = FALSE, cont = tab, label = "Matching", 
+    #####----------------------------------------------#####
+    group21 = ggroup(horizontal = FALSE, cont = tab, label = "Matching",
         expand = T)
-    group22 = ggroup(container = group21, use.scrollwindow = TRUE, 
+    group22 = ggroup(container = group21, use.scrollwindow = TRUE,
         expand = T)
     group2 = list()
     gt2 <- list()
@@ -1066,9 +1059,9 @@ mergefunc = function(h, ...){
     mergegui_env$idx <- 1
     mergegui_env$redo.indicate <- 0
     for (i in 1:n) {
-        group2[[i]] = ggroup(horizontal = FALSE, container = group22, 
+        group2[[i]] = ggroup(horizontal = FALSE, container = group22,
             expand = T)
-        gt2[[i]] <- gtable(nametable[, i, drop = F], container = group2[[i]], 
+        gt2[[i]] <- gtable(nametable[, i, drop = F], container = group2[[i]],
             expand = TRUE)
         tag(gt2[[i]], "prev.idx") <- svalue(gt2[[i]], index = TRUE)
         tag(gt2[[i]], "toggle") <- FALSE
@@ -1099,13 +1092,13 @@ mergefunc = function(h, ...){
         })
     }
     group23 <- ggroup(container = group21)
-    gbcombo21 <- gbutton("Undo", container = group23, handler = undo, 
+    gbcombo21 <- gbutton("Undo", container = group23, handler = undo,
         expand = TRUE)
-    gbcombo22 <- gbutton("Redo", container = group23, handler = redo, 
+    gbcombo22 <- gbutton("Redo", container = group23, handler = redo,
         expand = TRUE)
-    gbcombo23 <- gbutton("Reset", container = group23, handler = reset, 
+    gbcombo23 <- gbutton("Reset", container = group23, handler = reset,
         expand = TRUE)
-	
+
     #####------------------------------------------------#####
     ##  In the second tab we can:                            ##
     ##  (1) Watch and change the name or type of variables. ##
@@ -1113,59 +1106,59 @@ mergefunc = function(h, ...){
     ##  (3) Dictionary for factor variables.                ##
     #####------------------------------------------------#####
     group41 = ggroup(cont = tab, label = "Summary", expand = T)
-    group42 <- ggroup(container = group41, use.scrollwindow = TRUE, 
+    group42 <- ggroup(container = group41, use.scrollwindow = TRUE,
         expand = T)
-    name.inter <- data.frame(1:length(nameintersect), nameintersect, 
+    name.inter <- data.frame(1:length(nameintersect), nameintersect,
         var.class(nametable,dataset), stringsAsFactors = FALSE)
     colnames(name.inter) = c("Items", "Variables", "Class")
-    gt4 <- gtable(name.inter, multiple = T, container = group42, 
+    gt4 <- gtable(name.inter, multiple = T, container = group42,
         expand = TRUE, chosencol = 2)
     addhandlerdoubleclick(gt4, handler = VariableOptions)
-    group43 <- ggroup(horizontal = FALSE, container = group41, 
+    group43 <- ggroup(horizontal = FALSE, container = group41,
         expand = TRUE)
     group44 = ggroup(horizontal = TRUE, container = group43)
-    gbcombo431 <- gbutton("Numeric summary", container = group44, 
+    gbcombo431 <- gbutton("Numeric summary", container = group44,
         handler = smmry, expand = TRUE)
-    gbcombo432 <- gbutton("Graphical summary", container = group44, 
+    gbcombo432 <- gbutton("Graphical summary", container = group44,
         handler = graph, expand = TRUE)
-    gbcombo433 <- gbutton("Dictionary", container = group44, handler = dict, 
-        expand = TRUE)	
+    gbcombo433 <- gbutton("Dictionary", container = group44, handler = dict,
+        expand = TRUE)
 	group45 <- ggroup(container = group43, expand = TRUE, use.scrollwindow = TRUE)
-	
+
     #####------------------------------------------------#####
     ##  In the third tab we can:                           ##
     ##  (1) Select all or none variables.                   ##
     ##  (2) Export the data.                                ##
     #####------------------------------------------------#####
     group51 = ggroup(container = tab, label = "Export", expand = T)
-    group52 = ggroup(container = group51, use.scrollwindow = TRUE, 
+    group52 = ggroup(container = group51, use.scrollwindow = TRUE,
         expand = T)
 	Matched = substr(rownames(nametable),5,regexpr('-',rownames(nametable))-1)
 	FileMatched = as.character((n+1)-as.integer(Matched))
-    gt5 <- gtable(data.frame(name.inter[,1:3],FileMatched), multiple = T, container = group52, 
+    gt5 <- gtable(data.frame(name.inter[,1:3],FileMatched), multiple = T, container = group52,
         expand = TRUE, chosencol = 2)
 	addhandlerclicked(gt5,handler=function(h,...){
 		svalue(gbcombo57) = paste("Currently you select",length(svalue(gt5)),"variables.",sep=" ")
 	})
-    group53 = ggroup(horizontal = FALSE, container = group51, 
+    group53 = ggroup(horizontal = FALSE, container = group51,
         expand = TRUE)
-    gbcombo51 <- gbutton("Select All", container = group53, handler = function(h, 
+    gbcombo51 <- gbutton("Select All", container = group53, handler = function(h,
         ...) {
         svalue(gt5, index = TRUE) = 1:length(nameintersect)
 		svalue(gbcombo57) = paste("Currently you select all",length(nameintersect),"variables.",sep=" ")
         focus(gt5)
     })
-    gbcombo52 <- gbutton("Clear All", container = group53, handler = function(h, 
+    gbcombo52 <- gbutton("Clear All", container = group53, handler = function(h,
         ...) {
         svalue(gt5) = NULL
 		svalue(gbcombo57) = "Currently you select 0 variable."
     })
-    gbcombo55 <- gbutton("Export the matched data", container = group53, 
+    gbcombo55 <- gbutton("Export the matched data", container = group53,
         handler = watchdatafunc)
 	gbcombo56 <- glabel(paste("The complete merged data have ",sum(rows)," rows and ",
 		length(nameintersect)," columns."),cont=group53)
 	gbcombo57 <- glabel(paste("Currently you select 0 variable."),cont=group53)
-	
+
 	svalue(tab)=1
 }
 
@@ -1173,7 +1166,7 @@ mergeID = function(h, ...) {
 	####################################################
 	# mergeID is a function to merge the observations. #
 	####################################################
-    
+
 	watchIDfunc = function(h, ...) {
     #####------------------------------------------------------------------------------------#####
     ##  watchIDfunc is a function to export the merged dataset.                                 ##
@@ -1187,27 +1180,27 @@ mergeID = function(h, ...) {
         key = c()
         for (i in 1:n) {
             key[i] = svalue(gt3[[i]])
-            if (sum(duplicated(as.character(dataset[[i]][, key[i]]))) > 
+            if (sum(duplicated(as.character(dataset[[i]][, key[i]]))) >
                 0) {
-                gmessage(paste(key[i], "could not be the primary key for", 
+                gmessage(paste(key[i], "could not be the primary key for",
                   basename(gtfile[i]), "because it has repeated items. Please choose another key."))
                 return()
             }
             keyID = union(keyID, dataset[[i]][, key[i]])
             vcolumn[i] = length(vname[[i]]) - 1
         }
-        mergeIDdata = matrix(NA, nrow = length(keyID), ncol = sum(vcolumn) + 
+        mergeIDdata = matrix(NA, nrow = length(keyID), ncol = sum(vcolumn) +
             1, dimnames = list(keyID))
         mergeIDdata[, 1] = keyID
         mergeIDcolnames = c(key[1], 1:sum(vcolumn) + 1)
         for (i in 1:n) {
-            mergeIDdata[as.character(dataset[[i]][, key[i]]), 
-                cumsum(c(2, vcolumn))[i]:cumsum(c(1, vcolumn))[i + 
-                  1]] = as.matrix(dataset[[i]][, setdiff(vname[[i]], 
+            mergeIDdata[as.character(dataset[[i]][, key[i]]),
+                cumsum(c(2, vcolumn))[i]:cumsum(c(1, vcolumn))[i +
+                  1]] = as.matrix(dataset[[i]][, setdiff(vname[[i]],
                 key[i])])
-            mergeIDcolnames[cumsum(c(2, vcolumn))[i]:cumsum(c(1, 
-                vcolumn))[i + 1]] = paste(basename(gtfile[i]), 
-                ".", colnames(dataset[[i]][, setdiff(vname[[i]], 
+            mergeIDcolnames[cumsum(c(2, vcolumn))[i]:cumsum(c(1,
+                vcolumn))[i + 1]] = paste(basename(gtfile[i]),
+                ".", colnames(dataset[[i]][, setdiff(vname[[i]],
                   key[i])]), sep = "")
         }
         colnames(mergeIDdata) = mergeIDcolnames
@@ -1221,7 +1214,7 @@ mergeID = function(h, ...) {
 			gmessage("The files are merged!")
 		}
     }
- 	
+
     #####-----------------------------------------------------------#####
     ##  Input the selected files.                                      ##
     ##  dataset is a list to save all the data from different files.   ##
@@ -1251,7 +1244,7 @@ mergeID = function(h, ...) {
         loc[which(loc == 4)] = 1
         simplifiedname[[i]] = substring(vname[[i]], loc)
     }
- 
+
     a = intersect2(vname, simplifiedname)
     tmpuniq = a$uniq
     tmpnametable = a$individual
@@ -1259,7 +1252,7 @@ mergeID = function(h, ...) {
     for (i in 1:n) {
         tmpvname[[i]] = c(tmpnametable[, i], tmpuniq[[i]])
     }
- 
+
     #####-----------------------------------------#####
     ##  In this GUI we can:                          ##
     ##  Select the primary keys for different files. ##
@@ -1267,16 +1260,16 @@ mergeID = function(h, ...) {
     combo3 <- gwindow("Matched Primary Key", visible = TRUE)
     group3 <- ggroup(horizontal = FALSE, container = combo3)
     gt3 <- list()
-    
+
     for (i in 1:n) {
-        gl3 = glabel(paste("Select the Primary Key from", basename(gtfile[i])), 
+        gl3 = glabel(paste("Select the Primary Key from", basename(gtfile[i])),
             container = group3)
-        gt3[[i]] <- gcombobox(tmpvname[[i]], container = group3, 
+        gt3[[i]] <- gcombobox(tmpvname[[i]], container = group3,
             expand = T)
     }
-    gbcombo3 = gbutton("Match by the Key", container = group3, 
+    gbcombo3 = gbutton("Match by the Key", container = group3,
         handler = watchIDfunc)
-    
+
 }
 
 	#####---------------------#####
@@ -1285,17 +1278,17 @@ mergeID = function(h, ...) {
 
 	combo <- gwindow("Combination", visible = TRUE)
 	group <- ggroup(horizontal = FALSE, container = combo)
-	f.list <- matrix(nrow = 0, ncol = 1, dimnames = list(NULL, 
+	f.list <- matrix(nrow = 0, ncol = 1, dimnames = list(NULL,
 		"File"))
 
-	gt <- gtable(f.list, multiple = T, container = group, 
+	gt <- gtable(f.list, multiple = T, container = group,
 		expand = T)
-	gb1 <- gbutton("Open", container = group, handler = function(h, 
-		...) gt[, ] = na.omit(rbind(gt[, , drop = FALSE], matrix(if (Sys.info()["sysname"] == 
-		"Darwin") file.choose() else choose.files(), dimnames = list(NULL, 
+	gb1 <- gbutton("Open", container = group, handler = function(h,
+		...) gt[, ] = na.omit(rbind(gt[, , drop = FALSE], matrix(if (Sys.info()["sysname"] ==
+		"Darwin") file.choose() else choose.files(), dimnames = list(NULL,
 		"File")))))
-	gb2 <- gbutton("Match the Variables", container = group, 
+	gb2 <- gbutton("Match the Variables", container = group,
 		handler = mergefunc)
-	gb3 <- gbutton("Match by the Key", container = group, 
+	gb3 <- gbutton("Match by the Key", container = group,
 		handler = mergeID)
-}		
+}
