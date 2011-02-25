@@ -1,0 +1,220 @@
+% Preview source code
+
+%% LyX 1.6.8 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[letterpaper]{geometry}
+\geometry{verbose,lmargin=3cm,rmargin=3.4cm}
+\usepackage{graphicx}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+%\VignetteIndexEntry{An Introduction to the Data Merging GUI}
+
+\makeatother
+
+\begin{document}
+
+
+\title{An Introduction to the MergeGUI Package}
+
+
+\author{Xiaoyue Cheng%
+\thanks{Email: xycheng@iastate.edu%
+} \and Dianne Cook \and Heike Hofmann\\
+ Department of Statistics, Iowa State University}
+
+\maketitle
+
+\section{Introduction}
+
+The MergeGUI package intends to visualize the process of merging multiple
+datasets. The mergence can be directed vertically -- merging the variables,
+or horizontally -- merging the cases, or say, merge the IDs. 
+
+
+\section{Design of GUI}
+
+Beginning with the command 
+\begin{quotation}
+\texttt{> library(MergeGUI)}
+
+\texttt{> mergeGUI()}
+\end{quotation}
+the starting interface will show up. The following instruction will
+give a tour in this package.
+
+
+\subsection{Starting Interface}
+
+The users can open files in the starting interface and select some
+files to do the next command. They can match the variables or match
+the observations by the key. At least two files need to be selected
+to match. If no files are specifically chosen, then all the files
+are used in the next step.
+
+\begin{center}
+\includegraphics[width=0.75\textwidth]{open-windows} 
+\par\end{center}
+
+
+\subsection{The Matching-ID Interface}
+
+In some situations, we have several files containing the same subjects
+or experimental units, but different treatments or recording times.
+Then one of the desirable tasks is to combine those files by the subject
+ID's. In the `Combination' window, the last button is `Match by the
+Key'. Clicking it we'll see the window `Matched Primary Key'. With
+each file we select, one primary key is needed. A warning message
+will pop up if the variable we selected is not a proper key, for example
+if some of its records are replicated.
+
+\begin{center}
+\includegraphics[width=0.8\textwidth]{match_ID-windows} 
+\par\end{center}
+
+Upon clicking the button `Match by the Key', we can save the merged
+data into a new csv file.
+
+\begin{center}
+\includegraphics[width=0.5\textwidth]{match_ID_saving-windows} 
+\par\end{center}
+
+
+\subsection{The Matching-Variable Interface}
+
+This part allows the user to match the data from the different experimental
+units that have the same variables. In the `Combination' window, the
+second button is `Match the Variables'. Clicking it will open the
+window `Matched Variables'. This window has four tabs. We can activate
+one page by clicking the tab title.
+
+
+\subsubsection{Perferences Tab}
+
+In the preferences tab, the user can choose whether the y-scales are
+free for different data files when drawing the plots facetted by the
+files; whether the numerical p-values or the flag symbols are displayed
+in the summary tab or not. All the changes will be presented in the
+Summary tab.
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{preferences-windows}
+\par\end{center}
+
+
+\subsubsection{Checking Tab}
+
+The `Checking' page shows the automatic variable matching results
+and allows the user to change the variable matches. The variables
+present in each file are listed in separate panes. The order that
+the variable names are listed shows the variable matching.
+
+The functionality is as follows:
+\begin{enumerate}
+\item Variables are automatically matched by variable name in an initial
+pass through the data. These matched variables from the different
+files are aligned along a row.
+
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{match_top-windows}
+\par\end{center}
+
+\item Switch which variables are matched by switching the order of the variables
+in one file's list. The re-matching is achieved by clicking on two
+variable names in the same file list. Here the variable Score in studentsB.csv
+should be matched the variable Grade in the other two files.
+
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{match_switch-windows}
+\par\end{center}
+
+\item Unmatched variables are listed at he bottom of the list. Here the
+last two variables in studentsA.csv, studentsB.csv have no equivalent
+in studentsC.csv.
+
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{match_bottom-windows}
+\par\end{center}
+
+\item It is possible to undo, redo, or reset the matching. 
+\end{enumerate}
+
+\subsubsection{Summary}
+
+The `Summary' page, allows the user to check the values of the variables
+numerically, or graphically and set up a data dictionary for the categorical
+variables.
+
+Select the variables that you want to summarize and then click `Numeric
+summary' shows numerical information about these variables by file
+in the right pane. Here the variables Grade and Score have been selected
+for summary. Grade is categorical because it shows the student score/total
+score. Factor summaries are used, number of observations, levels,
+and the three most frequent levels. Score is a numeric variable so
+the summary statistics are used, mean, standard deviation, minimum,
+median and maximum, along with number of observations and number of
+missing values.
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{numeric_summary-windows}
+\par\end{center}
+
+Select a single variable and click `Graphical summary' to get plots
+of the variable, facetted by file. If more than two variables are
+selected, then only the first two numeric variables are used to draw
+a scatterplot instead of a histogram or a barchart for individual
+variable.
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{graphical_summary-windows}
+\par\end{center}
+
+Select several factor variables and click `Dictionary' to see all
+levels of the factors. The same levels shown in all files will be
+listed in front of other levels.
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{dictionary-windows}
+\par\end{center}
+
+By double clicking one variable, the attributes window will pop up.
+The user can edit the variable name or change the class of the variable.
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{attributes-windows}
+\par\end{center}
+
+When the Preference tab sets `Show p-values' or `Show the flag symbols',
+the variable list in the Summary tab looks as follows. All the flag
+symbols correspond to the p-values which are less than 0.05. The column
+`Unit' gives the misclassification rates for each variable if it is
+used to seperate the files by using classification tree (the rpart
+package). The column `Dist' compute the p-values of the Kolmogorov-Smirnov
+tests between different sources for each variable. `Miss' gives the
+p-values of the Chi-square tests for the counts of missing and non-missing
+values between different files for each variable.
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{pvalues-windows}
+\par\end{center}
+
+
+\subsubsection{Export}
+
+This tab provide the interface for saving the matched data into csv
+file. The user could select all or none variables by click the two
+buttons or choose several varaibles by Ctrl+Click. The export button
+will export the merged data and the numeric summaries of the selected
+variables into two csv files.
+
+\begin{center}
+\includegraphics[height=0.3\paperheight]{export-windows}
+\par\end{center}
+
+\end{document}
