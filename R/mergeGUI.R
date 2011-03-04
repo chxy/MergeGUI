@@ -104,7 +104,13 @@ simplifynames=function(namevector) {
 ##' includes NA if any variable are only NA's.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @export
-##' @examples ## TODO
+##' @examples
+##' a=data.frame(aa=1:5, ab=LETTERS[6:2], ac=as.logical(c(0,1,0,NA,0)))
+##' b=data.frame(b1=letters[12:14],b2=3:1)
+##' dat=list(a,b)
+##' name=matrix(c("ab","aa","ac","b1","b2",NA),ncol=2)
+##' var.class(name,dat)
+##'
 var.class = function(nametable.class, dataset.class) {
         varclass = rep("NA", nrow(nametable.class))
         for (i in 1:nrow(nametable.class)) {
@@ -123,8 +129,7 @@ var.class = function(nametable.class, dataset.class) {
         return(varclass)
     }
 
-##' Compute the misclassification rate for each variable if is used to
-##' seperate the files.
+##' Compute the misclassification rate for each variable.
 ##' When merging data from several datasets, it is meaningful to
 ##' detect whether the matched variables from different files have
 ##' different centers. The function computes the misclassification
@@ -135,7 +140,8 @@ var.class = function(nametable.class, dataset.class) {
 ##' rate.
 ##'
 ##' @param nametable.class A matrix of the matched variable names. The
-##' number of columns is equal to the number of files. Each row
+##' number of columns is equal to the number of files.
+##' The column names are required.  Each row
 ##' represents a variable that is going to be merged. Any elements
 ##' except NA in nametable.class must be the variable names in
 ##' dataset.class.
@@ -146,15 +152,30 @@ var.class = function(nametable.class, dataset.class) {
 ##' of the vector must be equal to the number of rows in
 ##' nametable.class. Since the variable names in nametable.class may
 ##' not be consistent, name.class is needed to name the variables.
+##' @param varclass A character vector of variable classes. The length
+##' of the vector must be equal to the number of rows in
+##' nametable.class. All the classes should be in "numeric",
+##' "integer", "factor", and "character". Default to be null, then
+##' it will be determined by \code{\link{var.class}}.
 ##' @return A vector of the misclassification rate. The rate is
 ##' between 0 and 1, or equal to 9 if one of more groups only have
 ##' NA's.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @export
-##' @examples ## TODO
-scale.rpart = function(nametable.class, dataset.class, name.class) {
+##' @examples
+##' a=data.frame(aa=1:5, ab=LETTERS[6:2], ac=as.logical(c(0,1,0,NA,0)))
+##' b=data.frame(b1=letters[12:14],b2=3:1)
+##' dat=list(a,b)
+##' name=matrix(c("ab","aa","ac","b1","b2",NA),ncol=2)
+##' colnames(name)=c("a","b")
+##' newname=c("letter","int","logic")
+##' scale.rpart(name,dat,newname)
+##'
+scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL) {
 		txtpb = txtProgressBar(min=0,max=1,width = 40,style=3)
-	    varclass = var.class(nametable.class,dataset.class)
+	    if (is.null(varclass)) {
+			varclass = var.class(nametable.class,dataset.class)
+		}
 		rows = unlist(lapply(dataset.class, nrow))
 		selectedvariables = which(varclass %in% c('numeric','integer','logical','factor'))
 		mergedata = matrix(nrow = sum(rows), ncol = length(selectedvariables) + 1)
@@ -175,25 +196,34 @@ scale.rpart = function(nametable.class, dataset.class, name.class) {
 		num = which(varclass[selectedvariables] %in% c('integer','numeric'))
 		fac = which(varclass[selectedvariables] %in% c('logical','factor'))
 		if (length(num)!=0) {
-			mergedata[,num+1] = sapply(mergedata[,num+1],function(avec){
-				as.numeric(as.character(avec))})
+			if (length(num)>1) {
+				mergedata[,num+1] = sapply(mergedata[,num+1],function(avec){as.numeric(as.character(avec))},simplify = FALSE)
+			} else {
+				mergedata[,num+1] = as.numeric(as.character(mergedata[,num+1]))
+			}
 		}
 		if (length(fac)!=0) {
-			mergedata[,fac+1]=sapply(mergedata[,fac+1],as.factor)
+			if (length(fac)>1) {
+				mergedata[,fac+1]=sapply(mergedata[,fac+1],as.factor,simplify = FALSE)
+			} else {
+				mergedata[,num+1] = as.factor(mergedata[,num+1])
+			}
 		}
 		setTxtProgressBar(txtpb, 0.3)
 
 		res = rep(9, nrow(nametable.class))
+		group = mergedata$source
 		for (i in 2:ncol(mergedata)) {
+			if (!(varclass[i-1] %in% c("factor","character") & length(unique(mergedata[,i]))>10)) {
 			fit_rpart = rpart(mergedata$source~mergedata[,i], control=c(maxdepth=1))
-                        group = mergedata$source
-			tmperror = weighted.mean(residuals(fit_rpart), 1/table(group)[group])
+			tmperror = weighted.mean(residuals(fit_rpart), 1/table(group)[group[!is.na(mergedata[,i])]])
 			res[name.class==colnames(mergedata)[i]] = round(tmperror,3)
 			if (tmperror==0){
 				if (all(is.na(mergedata[fit_rpart$where==2,i])) |
 					all(is.na(mergedata[fit_rpart$where==3,i]))) {
 					res[name.class==colnames(mergedata)[i]] = 9
 				}
+			}
 			}
 			setTxtProgressBar(txtpb, 0.3+0.65*i/ncol(mergedata))
 		}
@@ -220,15 +250,30 @@ scale.rpart = function(nametable.class, dataset.class, name.class) {
 ##' of the vector must be equal to the number of rows in
 ##' nametable.class. Since the variable names in nametable.class may
 ##' not be consistent, name.class is needed to name the variables.
+##' @param varclass A character vector of variable classes. The length
+##' of the vector must be equal to the number of rows in
+##' nametable.class. All the classes should be in "numeric",
+##' "integer", "factor", and "character". Default to be null, then
+##' it will be determined by \code{\link{var.class}}.
 ##' @return A vector of p-values from the KS-test for each
 ##' variable.The p-values are between 0 and 1, or equal to 9 if one of
 ##' more groups only have NA's.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @export
-##' @examples ## TODO
-scale.kstest = function(nametable.class, dataset.class, name.class) {
+##' @examples
+##' a=data.frame(aa=1:5, ab=LETTERS[6:2], ac=as.logical(c(0,1,0,NA,0)))
+##' b=data.frame(b1=letters[12:14],b2=3:1)
+##' dat=list(a,b)
+##' name=matrix(c("ab","aa","ac","b1","b2",NA),ncol=2)
+##' colnames(name)=c("a","b")
+##' newname=c("letter","int","logic")
+##' scale.kstest(name,dat,newname)
+##'
+scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL) {
 		txtpb = txtProgressBar(min=0,max=1,width = 40,style=3)
-	    varclass = var.class(nametable.class,dataset.class)
+	    if (is.null(varclass)) {
+			varclass = var.class(nametable.class,dataset.class)
+		}
 		rows = unlist(lapply(dataset.class, nrow))
 		selectedvariables = which(varclass %in% c('numeric','integer'))
 		mergedata = matrix(nrow = sum(rows), ncol = length(selectedvariables) + 1)
@@ -246,11 +291,13 @@ scale.kstest = function(nametable.class, dataset.class, name.class) {
 		setTxtProgressBar(txtpb, 0.1)
 		mergedata=as.data.frame(mergedata)
 		mergedata$source=factor(mergedata$source)
-        mergedata[,2:ncol(mergedata)]=sapply(mergedata[,2:ncol(mergedata)],
-			function(avec){as.numeric(as.character(avec))})
+		if (ncol(mergedata)>2) {
+			mergedata[,2:ncol(mergedata)]=sapply(mergedata[,2:ncol(mergedata)], function(avec){as.numeric(as.character(avec))},simplify = FALSE)
+		} else {
+			mergedata[,2]=as.numeric(as.character(mergedata[,2]))
+		}
 		setTxtProgressBar(txtpb, 0.15)
 
-		kstestout = c()
 		scaleclass = rep(9, nrow(nametable.class))
 		for (i in 2:ncol(mergedata)) {
 			tmpdat = mergedata[,c(1,i)]
@@ -264,20 +311,16 @@ scale.kstest = function(nametable.class, dataset.class, name.class) {
 					sig[j] = ks.test(a, b)$p.value
 				}
 			}
-			if (!all(sig>0.1)) {
-				kstestout = c(kstestout,i)
-				scaleclass[selectedvariables][i-1] = min(sig, na.rm=TRUE)
-			}
+			#if (!all(sig>0.1)) {
+			scaleclass[selectedvariables][i-1] = min(sig, na.rm=TRUE)
+			#}
 			setTxtProgressBar(txtpb, 0.15+0.8*i/ncol(mergedata))
 		}
 		setTxtProgressBar(txtpb, 1)
 		return(as.character(round(scaleclass,3)))
 	}
 
-##' Compute the p-values of the Chi-square tests for the counts of
-##' missing and non-missing values between different sources
-##' for each variable.
-##'
+##' Chi-square tests for the counts of missing and non-missing.
 ##' This function is used to detect whether the matched variables from
 ##' different files have different missing patterns. For each
 ##' variable, it will firstly count the missing and non-missing values
@@ -301,7 +344,15 @@ scale.kstest = function(nametable.class, dataset.class, name.class) {
 ##' missings of each variable. The p-values are between 0 and 1.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @export
-##' @examples ## TODO
+##' @examples
+##' a=data.frame(aa=1:5, ab=LETTERS[6:2], ac=as.logical(c(0,1,0,NA,0)))
+##' b=data.frame(b1=letters[12:14],b2=3:1)
+##' dat=list(a,b)
+##' name=matrix(c("ab","aa","ac","b1","b2",NA),ncol=2)
+##' colnames(name)=c("a","b")
+##' newname=c("letter","int","logic")
+##' scale.missing(name,dat,newname)
+##'
 scale.missing = function(nametable.class, dataset.class, name.class) {
 		txtpb = txtProgressBar(min=0,max=1,width = 40,style=3)
 		rows = unlist(lapply(dataset.class, nrow))
@@ -329,7 +380,12 @@ scale.missing = function(nametable.class, dataset.class, name.class) {
 				missingcount[j,1] = sum(is.na(tmpdat[tmpdat[,1]==levels(tmpdat[,1])[j],2]))
 				missingcount[j,2] = rows[j] - missingcount[j,1]
 			}
-			missingclass[i-1] = chisq.test(missingcount)$p.value
+			if (sum(missingcount[,1])==0 | sum(missingcount[,2])==0) {
+				missingclass[i-1] = 1
+			} else {
+				missingclass[i-1] = chisq.test(missingcount)$p.value
+				if (missingclass[i-1]=='NaN') missingclass[i-1]=9
+			}
 			setTxtProgressBar(txtpb, 0.1+0.8*i/ncol(mergedata))
 		}
 		setTxtProgressBar(txtpb, 1)
@@ -337,7 +393,6 @@ scale.missing = function(nametable.class, dataset.class, name.class) {
 	}
 
 ##' The Merging GUI.
-##'
 ##' This function will start with an starting interface, allowing 1)
 ##' selecting several data files; 2) doing the next command with more
 ##' than one files. There are two commands which could be selected:
@@ -349,10 +404,16 @@ scale.missing = function(nametable.class, dataset.class, name.class) {
 ##' selected factor varibles; 3) observe the misclassification rate,
 ##' KS-test p-values and Chi-square test p-values for each variable,
 ##' which helps to determine whether any transformation is needed for
-##' the variable; 4) change the name or class for any variable; 5)
-##' export the merged dataset and the summary for it. In the
-##' matching-case interface the user can determine a primary key for
-##' each data file and then merge the cases by the key.
+##' the variable; (For each variable, the user may want to know
+##' whether it could distinguish the sources correctly. So the
+##' misclassification rate is calculated through the tree model.
+##' KS-test is used to check whether any variable has different
+##' distributions for different sources. And the Chi-square test is
+##' useful when the user is interested in the pattern of missing
+##' values among the sources.) 4) change the name or class for any
+##' variable; 5) export the merged dataset and the summary for it. In
+##' the matching-case interface the user can determine a primary key
+##' for each data file and then merge the cases by the key.
 ##'
 ##' The merging GUI consists of four tabs. In the preferences tab,
 ##' user can choose whether the numerical p-values or the flag symbols
@@ -363,16 +424,26 @@ scale.missing = function(nametable.class, dataset.class, name.class) {
 ##' of variable names to align the same names in one row. The user can
 ##' switch the order of the variables in one file's list. It is
 ##' possible to undo, redo, or reset the matching. In the summary tab,
-##' there is a list of variable names on the left which correspond to
+##' there is a list of variable names on the left which corresponds to
 ##' the checking tab. The misclassification rate, KS-test p-values and
 ##' Chi-square test p-values for each variable may also be presented
 ##' with the variable names. On the top right there are three buttons:
 ##' Numeric summary, Graphical summary, and Dictionary. And the
-##' results could be shown below the buttons. In the export tab the
-##' user could select all or none variables by click the buttons or
-##' choose several varaibles by Ctrl+Click. Then the export
-##' button will export the merged data and the numeric summaries of
-##' the selected variables into two csv files.
+##' results could be shown below the buttons. For the graphical
+##' summary, histogram or barchart will be shown if a single variable
+##' is selected. A scatterplot will be drawn if two numeric or two
+##' factor varaibles are chosen. Side-by-side boxplots will be
+##' presented when one numeric and one factor varaibles are
+##' selected. A parallel coordinate plot is shown when all the
+##' variables selected are numeric and there are more than two
+##' variables. If more than two variables are chosen but the classes
+##' of the variables are mixed, i.e. some are numeric, some are factor
+##' or character, then histograms and barcharts will be drawn
+##' individually. All the plots are facetted by the source. In the
+##' export tab the user could select all or none variables by click
+##' the buttons or choose several varaibles by Ctrl+Click. Then the
+##' export button will export the merged data and the numeric
+##' summaries of the selected variables into two csv files.
 ##'
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
@@ -388,7 +459,7 @@ mergefunc = function(h, ...) {
 
     undo = function(h, ...) {
     #####-----------------------------------------------------#####
-	##  The following buttons are used for switching variables.  ##
+    ##  The following buttons are used for switching variables.  ##
     ##  undo button.                                             ##
     #####-----------------------------------------------------#####
         mergegui_env$idx <- mergegui_env$idx - 1
@@ -408,7 +479,7 @@ mergefunc = function(h, ...) {
 
     redo = function(h, ...) {
     #####-----------------------------------------------------#####
-	##  The following buttons are used for switching variables.  ##
+    ##  The following buttons are used for switching variables.  ##
     ##  redo button.                                             ##
     #####-----------------------------------------------------#####
         if (mergegui_env$redo.indicate == 0) {
@@ -431,7 +502,7 @@ mergefunc = function(h, ...) {
 
     reset = function(h, ...) {
     #####-----------------------------------------------------#####
-	##  The following buttons are used for switching variables.  ##
+    ##  The following buttons are used for switching variables.  ##
     ##  reset button.                                            ##
     #####-----------------------------------------------------#####
         for (i in 1:n) {
@@ -447,8 +518,8 @@ mergefunc = function(h, ...) {
 	VariableOptions = function(h, ...) {
     #####------------------------------------------------------#####
     ##  VariableOptions is the handler when double clicking gt4.  ##
-	##  It gives a new window for                                 ##
-	##          editing the attributes of variables.              ##
+    ##  It gives a new window for                                 ##
+    ##          editing the attributes of variables.              ##
     #####------------------------------------------------------#####
         gt4input0 = gwindow("Attributes", visible = T, width = 300,
             height = 200)
@@ -529,9 +600,9 @@ mergefunc = function(h, ...) {
     }
 
     smmry = function(h, ...) {
-	#####---------------------------------#####
+    #####---------------------------------#####
     ##  smmry is the handler of gbcombo431.  ##
-	##  (gbutton: Numeric Summary)           ##
+    ##  (gbutton: Numeric Summary)           ##
     #####---------------------------------#####
         graphics.off()
         name.select = svalue(mergegui_env$gt4, index = TRUE)
@@ -663,7 +734,7 @@ mergefunc = function(h, ...) {
     graph = function(h, ...) {
     #####---------------------------------#####
     ##  graph is the handler of gbcombo432.  ##
-	##  (gbutton: Graphic Summary)           ##
+    ##  (gbutton: Graphic Summary)           ##
     #####---------------------------------#####
         graphics.off()
 		delete(mergegui_env$group43, mergegui_env$group45)
@@ -762,10 +833,10 @@ mergefunc = function(h, ...) {
 			mergedata = data.frame(mergedata)
 			colnames(mergedata)[1]="source"
 			mergedata$source = factor(mergedata$source)
-			
+
 			gbcombo44[1, 1, expand = TRUE] = gbcombo442 = ggroup(container = gbcombo44, use.scrollwindow = TRUE)
 			gbcombo4421 = ggraphics(container = gbcombo442, height = 75 * 3 * n,  expand = TRUE)
-			
+
 			if (all(name.class %in% c("integer","numeric"))){
 				if (yscale=="regular y scale") {
 					eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point',facets=source~.))", sep = "")))
@@ -789,7 +860,6 @@ mergefunc = function(h, ...) {
 			}
 		}
 		if (length(name.select)>2) {
-			#gmessage("You selected more than two variable! Only the first two variables are shown.")
 			z = length(name.select)
 			name.table = matrix(NA, ncol=n, nrow=z)
 			for (i in 1:n) {
@@ -798,7 +868,7 @@ mergefunc = function(h, ...) {
 			name.intersect = as.character(mergegui_env$gt4[name.select,2])
 			name.class = as.character(mergegui_env$gt4[name.select, 3])
 			mergedata = data.frame(source = rep(simplifynames(gsub('.csv','',basename(gtfile))),rows))
-			
+
 			for (j in 1:z) {
 			tmp.num = c()
             for (i in 1:n) {
@@ -815,13 +885,13 @@ mergefunc = function(h, ...) {
 			mergedata = data.frame(mergedata)
 			colnames(mergedata)[1]="source"
 			mergedata$source = factor(mergedata$source)
-			
-			if (sum(name.class %in% c("integer","numeric"))<2) {
+
+			if (sum(name.class %in% c("integer","numeric"))<z) {
 			  for (i in 1:z) {
 				is.num = name.class[i] %in% c("integer","numeric")
-				
+
 				gbcombo44[i, 1, expand = TRUE] = ggraphics(container = gbcombo44, height = ifelse(is.num, 75 * 3 * n, 75 * 6),  expand = TRUE)
-				
+
 				if (yscale=="regular y scale") {
 					eval(parse(text = paste("print(qplot(", name.intersect[i], ",data=mergedata,facets=", ifelse(is.num, "source~.)", "~source)+coord_flip()"), ")", sep="")))
 				} else {
@@ -829,10 +899,8 @@ mergefunc = function(h, ...) {
 				}
 			  }
 			} else {
-				gmessage("Only the numeric variables are shown!")
-				
 				gbcombo44[1, 1, expand = TRUE] = ggraphics(container = gbcombo44, expand = TRUE)
-				print(ggpcp(mergedata,var=names(mergedata)[which(name.class %in% c('integer','numeric'))+1]) + geom_line() + facet_wrap(~source, ncol=1))
+				print(ggpcp(mergedata,var=names(mergedata)[2:(z+1)]) + geom_line() + facet_wrap(~source, ncol=1))
 			}
 		}
     }
@@ -840,7 +908,7 @@ mergefunc = function(h, ...) {
     dict = function(h, ...) {
     #####--------------------------------#####
     ##  dict is the handler of gbcombo432.  ##
-	##  (gbutton: Dictionary)               ##
+    ##  (gbutton: Dictionary)               ##
     #####--------------------------------#####
         graphics.off()
 		delete(mergegui_env$group43, mergegui_env$group45)
@@ -917,19 +985,20 @@ mergefunc = function(h, ...) {
 			return()
 		}
 
+		gt4col1 = mergegui_env$gt4[,1]
 		if (!exists("name_intersection_panel",where=mergegui_env)) {
 			mergegui_env$namepanel = nametable
 			for (i in 1:n) {
 				mergegui_env$namepanel[,i]<-gt2[[i]][,]
 			}
-			mergegui_env$nameintersection <- mergegui_env$gt4[,2]
-			scale1 <- scale.rpart(mergegui_env$namepanel,dataset,mergegui_env$nameintersection)
-			cat("\n")
-			scale2 <- scale.kstest(mergegui_env$namepanel,dataset,mergegui_env$nameintersection)
-			cat("\n")
-			scale3 <- scale.missing(mergegui_env$namepanel,dataset,mergegui_env$nameintersection)
-			cat("\n")
-			mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[,],scale1,scale2,scale3,stringsAsFactors = FALSE)
+			mergegui_env$nameintersection <- mergegui_env$gt4[order(gt4col1),2]
+			scale1 <- scale.rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+			cat("(1/3) \n")
+			scale2 <- scale.kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+			cat("(2/3) \n")
+			scale3 <- scale.missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
+			cat("(3/3) \n")
+			mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),],scale1,scale2,scale3,stringsAsFactors = FALSE)
 			colnames(mergegui_env$name_intersection_panel) <- c("Items", "Variables", "Class", "Unit","Dist","Miss")
 		} else {
 			checknamepanel=c()
@@ -938,26 +1007,26 @@ mergefunc = function(h, ...) {
 				if (!checknamepanel[i]) mergegui_env$namepanel[,i]<-gt2[[i]][,]
 			}
 			if (!all(checknamepanel)){
-				mergegui_env$nameintersection <- mergegui_env$gt4[,2]
-				scale1 <- scale.rpart(mergegui_env$namepanel,dataset,mergegui_env$nameintersection)
-				cat("\n")
-				scale2 <- scale.kstest(mergegui_env$namepanel,dataset,mergegui_env$nameintersection)
-				cat("\n")
-				scale3 <- scale.missing(mergegui_env$namepanel,dataset,mergegui_env$nameintersection)
-				cat("\n")
-				mergegui_env$name_intersection_panel<- data.frame(mergegui_env$gt4[,],scale1,scale2,scale3,stringsAsFactors = FALSE)
+				mergegui_env$nameintersection <- mergegui_env$gt4[order(gt4col1),2]
+				scale1 <- scale.rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+				cat("(1/3) \n")
+				scale2 <- scale.kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+				cat("(2/3) \n")
+				scale3 <- scale.missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
+				cat("(3/3) \n")
+				mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),],scale1,scale2,scale3,stringsAsFactors = FALSE)
 			}
 		}
 		delete(mergegui_env$group42, mergegui_env$gt4)
 
 		if (flagsym=="Show the flag symbol") {
-			flag1 = !is.na(mergegui_env$gt4[,4:6])
-			flag2 = sapply(mergegui_env$gt4[,4:6],function(avec){
+			flag1 = !is.na(mergegui_env$name_intersection_panel[,4:6])
+			flag2 = sapply(mergegui_env$name_intersection_panel[,4:6],function(avec){
 				as.numeric(as.character(avec))<0.05
 			})
 			flag = flag1 & flag2
 			newgt4 = mergegui_env$name_intersection_panel
-			newgt4[,4]<- as.character(newgt4[,4])
+			newgt4[,4]<-as.character(newgt4[,4])
 			newgt4[,5]<-as.character(newgt4[,5])
 			newgt4[,6]<-as.character(newgt4[,6])
 			newgt4[flag[,1],4] <- "X"
@@ -966,23 +1035,23 @@ mergefunc = function(h, ...) {
 			newgt4[!flag[,1],4] <- ""
 			newgt4[!flag[,2],5] <- ""
 			newgt4[!flag[,3],6] <- ""
-			mergegui_env$gt4 <- gtable(newgt4, multiple = T, container = mergegui_env$group42, expand = TRUE, chosencol = 2)
+			mergegui_env$gt4 <- gtable(newgt4[gt4col1,], multiple = T, container = mergegui_env$group42, expand = TRUE, chosencol = 2)
 		} else {
-			mergegui_env$gt4 <- gtable(mergegui_env$name_intersection_panel, multiple = T,container = mergegui_env$group42, expand = TRUE, chosencol = 2)
+			mergegui_env$gt4 <- gtable(mergegui_env$name_intersection_panel[gt4col1,], multiple = T,container = mergegui_env$group42, expand = TRUE, chosencol = 2)
 		}
 
 	}
 
     watchdatafunc = function(h, ...) {
-	#####-------------------------------------------------------#####
+    #####-------------------------------------------------------#####
     ##  watchdatafunc is a function to export the merged dataset.  ##
     ##  For the selected checkboxs, we export the corresponding    ##
-	##          variables from all files.                          ##
+    ##          variables from all files.                          ##
     ##  The public name for the selected variable is the shortest  ##
-	##          name of that variable among different files.       ##
+    ##          name of that variable among different files.       ##
     ##  mergedata is a matrix to save the merged dataset.          ##
     ##  We should write 'xxx.csv'                                  ##
-	##          when we export mergedata and save the file.        ##
+    ##          when we export mergedata and save the file.        ##
     #####-------------------------------------------------------#####
 		name.select = svalue(gt5, index = TRUE)
         if (length(name.select) == 0) {
@@ -1123,9 +1192,9 @@ mergefunc = function(h, ...) {
     ##  'rows' is  a vector to save the number of observations for each file.  ##
     ##  'vname' is  a list to save the original colnames of the dataset.       ##
     ##  'simplifiedname' is  a list to save the simplified name.               ##
-	##          (delete the filenames in the colnames if they have)            ##
+    ##          (delete the filenames in the colnames if they have)            ##
     ##  'vname' & 'simplifiedname' are 1-1 projections,                        ##
-	##          although 'simplifiedname' haves repeated names.                ##
+    ##          although 'simplifiedname' haves repeated names.                ##
     #####-------------------------------------------------------------------#####
     dataset <- list()
     simplifiedname <- list()
@@ -1160,19 +1229,19 @@ mergefunc = function(h, ...) {
 
     #####----------------------------------------------------#####
     ##  Now we are going to generate two stuffs:                ##
-	##          'nameintersect' and 'nametable'.                ##
+    ##          'nameintersect' and 'nametable'.                ##
     ##  'nametable' is a matrix with all matched and            ##
-	##          unmatched variable names ('vname').             ##
+    ##          unmatched variable names ('vname').             ##
     ##  'nameintersect' is a vector of mutually exclusive       ##
-	##          and collectively exhaustive names,              ##
-	##          with 'simplifiedname' at the beginning,         ##
-	##          and the special 'vname' at the end.             ##
-	##  length(nameintersect) == nrow(nametable)                ##
+    ##          and collectively exhaustive names,              ##
+    ##          with 'simplifiedname' at the beginning,         ##
+    ##          and the special 'vname' at the end.             ##
+    ##  length(nameintersect) == nrow(nametable)                ##
     ##  'Part1-1-' is the intersection for all the n files.     ##
     ##  'Part(n-i+1)' is the intersection for all combination   ##
     ##	        of the n-i+1 files.                             ##
     ##  'Partn-i-' is the left part of the i-th files,          ##
-	##          it cannot be intersected with any other files.  ##
+    ##          it cannot be intersected with any other files.  ##
     #####----------------------------------------------------#####
     a = intersect2(vname, simplifiedname)
     nameintersect <- a$public
@@ -1215,7 +1284,7 @@ mergefunc = function(h, ...) {
     }
     colnames(nametable) <- simplifynames(gsub('.csv','',basename(gtfile)))
 
-	#####-------------------------------#####
+    #####-------------------------------#####
     ##  New window for matching variables  ##
     #####-------------------------------#####
  	combo2 = gwindow("Matched Variables", visible = T, width = 900,
@@ -1225,7 +1294,7 @@ mergefunc = function(h, ...) {
 		rm("name_intersection_panel",envir=mergegui_env)
 	}
 
-	#####-----------------------------------------#####
+    #####-----------------------------------------#####
     ##  In the first tab we can:                     ##
     ##  (1) Determine the scaling way.               ##
     ##  (2) Determine whether show p-values or not.  ##
@@ -1477,9 +1546,7 @@ mergeID = function(h, ...) {
 	gt <- gtable(f.list, multiple = T, container = group,
 		expand = T)
 	gb1 <- gbutton("Open", container = group, handler = function(h,
-		...) gt[, ] = na.omit(rbind(gt[, , drop = FALSE], matrix(if (.Platform$OS.type != 'windows')
-                                                   file.choose() else choose.files(), dimnames = list(NULL,
-		"File")))))
+		...) gt[, ] = na.omit(gfile(multiple=TRUE)))
 	gb2 <- gbutton("Match the Variables", container = group,
 		handler = mergefunc)
 	gb3 <- gbutton("Match by the Key", container = group,

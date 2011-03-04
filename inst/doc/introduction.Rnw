@@ -153,7 +153,7 @@ variables.
 
 Select the variables that you want to summarize and then click `Numeric
 summary' shows numerical information about these variables by file
-in the right pane. Here the variables Grade and Score have been selected
+in the right panel. Here the variables Grade and Score have been selected
 for summary. Grade is categorical because it shows the student score/total
 score. Factor summaries are used, number of observations, levels,
 and the three most frequent levels. Score is a numeric variable so
@@ -166,10 +166,17 @@ missing values.
 \par\end{center}
 
 Select a single variable and click `Graphical summary' to get plots
-of the variable, facetted by file. If more than two variables are
-selected, then only the first two numeric variables are used to draw
-a scatterplot instead of a histogram or a barchart for individual
-variable.
+of the variable, facetted by file. For the graphical summary, 
+histogram or barchart will be shown if a single variable
+is selected. A scatterplot will be drawn if two numeric or two
+factor varaibles are chosen. Side-by-side boxplots will be
+presented when one numeric and one factor varaibles are
+selected. A parallel coordinate plot is shown when all the
+variables selected are numeric and there are more than two
+variables. If more than two variables are chosen but the classes
+of the variables are mixed, i.e. some are numeric, some are factor
+or character, then histograms and barcharts will be drawn
+individually.
 
 \begin{center}
 \includegraphics[height=0.3\paperheight]{graphical_summary-windows}
@@ -192,13 +199,19 @@ The user can edit the variable name or change the class of the variable.
 
 When the Preference tab sets `Show p-values' or `Show the flag symbols',
 the variable list in the Summary tab looks as follows. All the flag
-symbols correspond to the p-values which are less than 0.05. The column
-`Unit' gives the misclassification rates for each variable if it is
-used to seperate the files by using classification tree (the rpart
-package). The column `Dist' compute the p-values of the Kolmogorov-Smirnov
-tests between different sources for each variable. `Miss' gives the
-p-values of the Chi-square tests for the counts of missing and non-missing
-values between different files for each variable.
+symbols correspond to the p-values which are less than 0.05. 
+For each variable, the column `Unit' gives the misclassification 
+rates for each variable if the user wants to know whether any 
+variable could distinguish the sources correctly. The 
+misclassification rate is calculated through the classification 
+tree (the rpart package).
+The column `Dist' compute the p-values of the Kolmogorov-Smirnov
+tests between different sources. It is used to check whether any 
+variable has different distributions for different sources.
+`Miss' gives the p-values of the Chi-square tests for the counts 
+of missing and non-missing values between different files for each 
+variable. So the user could know the pattern of missing values 
+among the sources.
 
 \begin{center}
 \includegraphics[height=0.3\paperheight]{pvalues-windows}
