@@ -172,7 +172,6 @@ var.class = function(nametable.class, dataset.class) {
 ##' scale.rpart(name,dat,newname)
 ##'
 scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL) {
-		txtpb = txtProgressBar(min=0,max=1,width = 40,style=3)
 	    if (is.null(varclass)) {
 			varclass = var.class(nametable.class,dataset.class)
 		}
@@ -180,7 +179,6 @@ scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
 		selectedvariables = which(varclass %in% c('numeric','integer','logical','factor'))
 		mergedata = matrix(nrow = sum(rows), ncol = length(selectedvariables) + 1)
         colnames(mergedata) = c("source", name.class[selectedvariables])
-		setTxtProgressBar(txtpb, 0.1)
         for (i in 1:length(dataset.class)) {
             tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]),
                 rep(NA, rows[i] * length(selectedvariables))), nrow = rows[i])
@@ -190,7 +188,6 @@ scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
             mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
                 ] = tmp
         }
-		setTxtProgressBar(txtpb, 0.2)
 		mergedata=as.data.frame(mergedata)
 		mergedata$source=factor(mergedata$source)
 		num = which(varclass[selectedvariables] %in% c('integer','numeric'))
@@ -206,28 +203,19 @@ scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
 			if (length(fac)>1) {
 				mergedata[,fac+1]=sapply(mergedata[,fac+1],as.factor,simplify = FALSE)
 			} else {
-				mergedata[,num+1] = as.factor(mergedata[,num+1])
+				mergedata[,fac+1] = as.factor(mergedata[,fac+1])
 			}
 		}
-		setTxtProgressBar(txtpb, 0.3)
 
-		res = rep(9, nrow(nametable.class))
+		res = rep(NA, nrow(nametable.class))
 		group = mergedata$source
 		for (i in 2:ncol(mergedata)) {
-			if (!(varclass[i-1] %in% c("factor","character") & length(unique(mergedata[,i]))>10)) {
-			fit_rpart = rpart(mergedata$source~mergedata[,i], control=c(maxdepth=1))
+			if (!(varclass[i-1] %in% c("factor","character") & length(unique(mergedata[,i]))>10) & sum(tapply(mergedata[,i],mergedata[,1],function(x){!all(is.na(x))}))>=2) {
+			fit_rpart = rpart(mergedata$source~mergedata[,i], control=c(maxdepth=ceiling(log2(length(dataset.class)))))
 			tmperror = weighted.mean(residuals(fit_rpart), 1/table(group)[group[!is.na(mergedata[,i])]])
 			res[name.class==colnames(mergedata)[i]] = round(tmperror,3)
-			if (tmperror==0){
-				if (all(is.na(mergedata[fit_rpart$where==2,i])) |
-					all(is.na(mergedata[fit_rpart$where==3,i]))) {
-					res[name.class==colnames(mergedata)[i]] = 9
-				}
 			}
-			}
-			setTxtProgressBar(txtpb, 0.3+0.65*i/ncol(mergedata))
 		}
-		setTxtProgressBar(txtpb, 1)
 		return(as.character(res))
             }
 
@@ -270,7 +258,6 @@ scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
 ##' scale.kstest(name,dat,newname)
 ##'
 scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL) {
-		txtpb = txtProgressBar(min=0,max=1,width = 40,style=3)
 	    if (is.null(varclass)) {
 			varclass = var.class(nametable.class,dataset.class)
 		}
@@ -278,7 +265,6 @@ scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL
 		selectedvariables = which(varclass %in% c('numeric','integer'))
 		mergedata = matrix(nrow = sum(rows), ncol = length(selectedvariables) + 1)
         colnames(mergedata) = c("source", name.class[selectedvariables])
-		setTxtProgressBar(txtpb, 0.05)
         for (i in 1:length(dataset.class)) {
             tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]),
                 rep(NA, rows[i] * length(selectedvariables))), nrow = rows[i])
@@ -288,7 +274,6 @@ scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL
             mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
                 ] = tmp
         }
-		setTxtProgressBar(txtpb, 0.1)
 		mergedata=as.data.frame(mergedata)
 		mergedata$source=factor(mergedata$source)
 		if (ncol(mergedata)>2) {
@@ -296,9 +281,8 @@ scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL
 		} else {
 			mergedata[,2]=as.numeric(as.character(mergedata[,2]))
 		}
-		setTxtProgressBar(txtpb, 0.15)
 
-		scaleclass = rep(9, nrow(nametable.class))
+		scaleclass = rep(NA, nrow(nametable.class))
 		for (i in 2:ncol(mergedata)) {
 			tmpdat = mergedata[,c(1,i)]
 			sig = c()
@@ -311,12 +295,8 @@ scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL
 					sig[j] = ks.test(a, b)$p.value
 				}
 			}
-			#if (!all(sig>0.1)) {
 			scaleclass[selectedvariables][i-1] = min(sig, na.rm=TRUE)
-			#}
-			setTxtProgressBar(txtpb, 0.15+0.8*i/ncol(mergedata))
 		}
-		setTxtProgressBar(txtpb, 1)
 		return(as.character(round(scaleclass,3)))
 	}
 
@@ -354,41 +334,34 @@ scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL
 ##' scale.missing(name,dat,newname)
 ##'
 scale.missing = function(nametable.class, dataset.class, name.class) {
-		txtpb = txtProgressBar(min=0,max=1,width = 40,style=3)
 		rows = unlist(lapply(dataset.class, nrow))
 		mergedata = matrix(nrow = sum(rows), ncol = length(name.class) + 1)
         colnames(mergedata) = c("source", name.class)
         for (i in 1:length(dataset.class)) {
-            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]),
-                rep(NA, rows[i] * length(name.class))), nrow = rows[i])
+            tmp = matrix(c(rep(colnames(nametable.class)[i], rows[i]),rep(NA, rows[i] * length(name.class))), nrow = rows[i])
             colnames(tmp) = c("source", nametable.class[, i])
-            tmp[, na.omit(nametable.class[, i])] = as.matrix(dataset.class[[i]])[,
-                na.omit(nametable.class[, i])]
-            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
-                ] = tmp
+            tmp[, na.omit(nametable.class[, i])] = as.matrix(dataset.class[[i]])[,na.omit(nametable.class[, i])]
+            mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],] = tmp
         }
 		mergedata=as.data.frame(mergedata)
 		mergedata$source=factor(mergedata$source)
-		setTxtProgressBar(txtpb, 0.1)
 
 		chi2testout = c()
-		missingclass = rep(9, nrow(nametable.class))
+		missingclass = rep(NA, nrow(nametable.class))
 		for (i in 2:ncol(mergedata)) {
 			tmpdat = mergedata[,c(1,i)]
 			missingcount = matrix(0, nrow=length(levels(tmpdat[,1])), ncol=2)
 			for (j in 1:length(levels(tmpdat[,1]))) {
-				missingcount[j,1] = sum(is.na(tmpdat[tmpdat[,1]==levels(tmpdat[,1])[j],2]))
+				missingcount[j,1] = sum(is.na(tmpdat[tmpdat[,1]==colnames(nametable.class)[j],2]))
 				missingcount[j,2] = rows[j] - missingcount[j,1]
 			}
 			if (sum(missingcount[,1])==0 | sum(missingcount[,2])==0) {
 				missingclass[i-1] = 1
 			} else {
 				missingclass[i-1] = chisq.test(missingcount)$p.value
-				if (missingclass[i-1]=='NaN') missingclass[i-1]=9
+				if (missingclass[i-1]=='NaN') missingclass[i-1]=NA
 			}
-			setTxtProgressBar(txtpb, 0.1+0.8*i/ncol(mergedata))
 		}
-		setTxtProgressBar(txtpb, 1)
 		return(as.character(round(missingclass,3)))
 	}
 
@@ -986,20 +959,8 @@ mergefunc = function(h, ...) {
 		}
 
 		gt4col1 = mergegui_env$gt4[,1]
-		if (!exists("name_intersection_panel",where=mergegui_env)) {
+		if (!exists("namepanel",where=mergegui_env)) {
 			mergegui_env$namepanel = nametable
-			for (i in 1:n) {
-				mergegui_env$namepanel[,i]<-gt2[[i]][,]
-			}
-			mergegui_env$nameintersection <- mergegui_env$gt4[order(gt4col1),2]
-			scale1 <- scale.rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-			cat("(1/3) \n")
-			scale2 <- scale.kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-			cat("(2/3) \n")
-			scale3 <- scale.missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
-			cat("(3/3) \n")
-			mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),],scale1,scale2,scale3,stringsAsFactors = FALSE)
-			colnames(mergegui_env$name_intersection_panel) <- c("Items", "Variables", "Class", "Unit","Dist","Miss")
 		} else {
 			checknamepanel=c()
 			for (i in 1:n) {
@@ -1009,14 +970,13 @@ mergefunc = function(h, ...) {
 			if (!all(checknamepanel)){
 				mergegui_env$nameintersection <- mergegui_env$gt4[order(gt4col1),2]
 				scale1 <- scale.rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-				cat("(1/3) \n")
 				scale2 <- scale.kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-				cat("(2/3) \n")
 				scale3 <- scale.missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
-				cat("(3/3) \n")
 				mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),],scale1,scale2,scale3,stringsAsFactors = FALSE)
+				colnames(mergegui_env$name_intersection_panel) <- c("Items", "Variables", "Class", "Unit","Dist","Miss")
 			}
 		}
+
 		delete(mergegui_env$group42, mergegui_env$gt4)
 
 		if (flagsym=="Show the flag symbol") {
@@ -1185,7 +1145,9 @@ mergefunc = function(h, ...) {
         }
     }
 
-
+	if (exists("combo2",where=mergegui_env)) {
+		dispose(mergegui_env$combo2)
+	}
     #####-------------------------------------------------------------------#####
     ##  Import the selected files.                                             ##
     ##  'dataset' is a list to save all the data from different files.         ##
@@ -1287,9 +1249,9 @@ mergefunc = function(h, ...) {
     #####-------------------------------#####
     ##  New window for matching variables  ##
     #####-------------------------------#####
- 	combo2 = gwindow("Matched Variables", visible = T, width = 900,
+ 	mergegui_env$combo2 = gwindow("Matched Variables", visible = T, width = 900,
         height = 600)
-    tab = gnotebook(container = combo2)
+    tab = gnotebook(container = mergegui_env$combo2)
 	if (exists("name_intersection_panel",where=mergegui_env)){
 		rm("name_intersection_panel",envir=mergegui_env)
 	}
@@ -1304,7 +1266,7 @@ mergefunc = function(h, ...) {
     frame12 = gframe("Scaling of histograms",container = group11, horizontal = FALSE)
 	radio121 <- gradio(c("regular y scale","relative y scale"),container = frame12)
 	frame13 = gframe("Flag for variables",container = group11, horizontal = FALSE)
-	radio131 <- gradio(c("Do not show p-values or flags","Show p-values","Show the flag symbol"), container = frame13, handler=change)
+	radio131 <- gradio(c("Show p-values","Show the flag symbol","Do not show p-values or flags"), container = frame13, handler=change)
 
     #####----------------------------------------------#####
     ##  In the second tab we can:                         ##
@@ -1373,13 +1335,11 @@ mergefunc = function(h, ...) {
     ##  (3) Dictionary for factor variables.                ##
     #####------------------------------------------------#####
     group41 = ggroup(cont = tab, label = "Summary", expand = T)
-    mergegui_env$group42 <- ggroup(container = group41, use.scrollwindow = TRUE,
-        expand = T)
-    name.inter <- data.frame(1:length(nameintersect), nameintersect,
-        var.class(nametable,dataset), stringsAsFactors = FALSE)
-    colnames(name.inter) = c("Items", "Variables", "Class")
-    mergegui_env$gt4 <- gtable(name.inter, multiple = T, container = mergegui_env$group42,
-        expand = TRUE, chosencol = 2)
+    mergegui_env$group42 <- ggroup(container = group41, use.scrollwindow = TRUE, expand = T)
+    mergegui_env$name_intersection_panel <- data.frame(1:length(nameintersect), nameintersect,var.class(nametable,dataset), scale.rpart(nametable,dataset,nameintersect), scale.kstest(nametable,dataset,nameintersect),scale.missing(nametable,dataset,nameintersect), stringsAsFactors = FALSE)
+    colnames(mergegui_env$name_intersection_panel) = c("Items", "Variables", "Class", "Unit","Dist","Miss")
+	
+    mergegui_env$gt4 <- gtable(mergegui_env$name_intersection_panel, multiple = T, container = mergegui_env$group42, expand = TRUE, chosencol = 2)
     addhandlerdoubleclick(mergegui_env$gt4, handler = VariableOptions)
     mergegui_env$group43 <- ggroup(horizontal = FALSE, container = group41,
         expand = TRUE)
@@ -1402,7 +1362,7 @@ mergefunc = function(h, ...) {
         expand = T)
 	Matched = substr(rownames(nametable),5,regexpr('-',rownames(nametable))-1)
 	FileMatched = as.character((n+1)-as.integer(Matched))
-    gt5 <- gtable(data.frame(name.inter[,1:3],FileMatched), multiple = T, container = group52,
+    gt5 <- gtable(data.frame(mergegui_env$name_intersection_panel[,1:3],FileMatched), multiple = T, container = group52,
         expand = TRUE, chosencol = 2)
 	addhandlerclicked(gt5,handler=function(h,...){
 		svalue(gbcombo57) = paste("Currently you select",length(svalue(gt5)),"variables.",sep=" ")
@@ -1546,7 +1506,7 @@ mergeID = function(h, ...) {
 	gt <- gtable(f.list, multiple = T, container = group,
 		expand = T)
 	gb1 <- gbutton("Open", container = group, handler = function(h,
-		...) gt[, ] = na.omit(gfile(multiple=TRUE)))
+		...) gt[,] = union(gt[,],na.omit(gfile(multiple=TRUE))))
 	gb2 <- gbutton("Match the Variables", container = group,
 		handler = mergefunc)
 	gb3 <- gbutton("Match by the Key", container = group,
