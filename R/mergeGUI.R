@@ -441,8 +441,8 @@ scale_missing = function(nametable.class, dataset.class, name.class) {
 ##' if (interactive()) {
 ##' MergeGUI()
 ##' 
-##' csvnames=list.files(system.file("data",package="MergeGUI"))
-##' filenames=system.file("data",csvnames,package="MergeGUI")
+##' csvnames=list.files(system.file("doc",package="MergeGUI"),pattern = "\\\\.csv$")
+##' filenames=system.file("doc",csvnames,package="MergeGUI")
 ##' MergeGUI(filenames)
 ##' }
 ##'
