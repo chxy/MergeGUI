@@ -25,6 +25,7 @@
 ##' 'uniq' is a list of the left part of 'vname' if we pick
 ##' 'individual' out.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @exportPattern "^[^\\.]"
 ##' @export
 ##' @examples
 ##' a = list(x1=c("label11","label12"),
@@ -169,9 +170,9 @@ var.class = function(nametable.class, dataset.class) {
 ##' name=matrix(c("ab","aa","ac","b1","b2",NA),ncol=2)
 ##' colnames(name)=c("a","b")
 ##' newname=c("letter","int","logic")
-##' scale.rpart(name,dat,newname)
+##' scale_rpart(name,dat,newname)
 ##'
-scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL) {
+scale_rpart = function(nametable.class, dataset.class, name.class,varclass=NULL) {
 	    if (is.null(varclass)) {
 			varclass = var.class(nametable.class,dataset.class)
 		}
@@ -270,9 +271,9 @@ scale.rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
 ##' name=matrix(c("ab","aa","ac","b1","b2",NA),ncol=2)
 ##' colnames(name)=c("a","b")
 ##' newname=c("letter","int","logic")
-##' scale.kstest(name,dat,newname)
+##' scale_kstest(name,dat,newname)
 ##'
-scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL) {
+scale_kstest = function(nametable.class, dataset.class, name.class,varclass=NULL) {
 	    if (is.null(varclass)) {
 			varclass = var.class(nametable.class,dataset.class)
 		}
@@ -346,9 +347,9 @@ scale.kstest = function(nametable.class, dataset.class, name.class,varclass=NULL
 ##' name=matrix(c("ab","aa","ac","b1","b2",NA),ncol=2)
 ##' colnames(name)=c("a","b")
 ##' newname=c("letter","int","logic")
-##' scale.missing(name,dat,newname)
+##' scale_missing(name,dat,newname)
 ##'
-scale.missing = function(nametable.class, dataset.class, name.class) {
+scale_missing = function(nametable.class, dataset.class, name.class) {
 		rows = unlist(lapply(dataset.class, nrow))
 		mergedata = matrix(nrow = sum(rows), ncol = length(name.class) + 1)
         colnames(mergedata) = c("source", name.class)
@@ -433,14 +434,19 @@ scale.missing = function(nametable.class, dataset.class, name.class) {
 ##' export button will export the merged data and the numeric
 ##' summaries of the selected variables into two csv files.
 ##'
+##' @param filenames A vector of csv file names with their full paths.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @examples
 ##' if (interactive()) {
-##' mergeGUI()
+##' MergeGUI()
+##' 
+##' csvnames=list.files(system.file("data",package="MergeGUI"))
+##' filenames=system.file("data",csvnames,package="MergeGUI")
+##' MergeGUI(filenames)
 ##' }
 ##'
-MergeGUI = function() {
+MergeGUI = function(filenames=NULL) {
 	mergegui_env = new.env()
 
 mergefunc = function(h, ...) {
@@ -459,10 +465,8 @@ mergefunc = function(h, ...) {
             gt2[[i]][] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
         }
         mergegui_env$redo.indicate <- 1
-        mergegui_env$gt4[, 2] = mergegui_env$hstry2[[mergegui_env$idx]]
-        mergegui_env$gt4[, 3] = mergegui_env$hstry3[[mergegui_env$idx]]
-        gt5[, 2] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 2]
-        gt5[, 3] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 3]
+        mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
+        mergegui_env$gt5[,] = mergegui_env$hstry3[[mergegui_env$idx]]
     }
 
     redo = function(h, ...) {
@@ -482,10 +486,8 @@ mergefunc = function(h, ...) {
         for (i in 1:n) {
             gt2[[i]][] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
         }
-        mergegui_env$gt4[, 2] = mergegui_env$hstry2[[mergegui_env$idx]]
-        mergegui_env$gt4[, 3] = mergegui_env$hstry3[[mergegui_env$idx]]
-        gt5[, 2] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 2]
-        gt5[, 3] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 3]
+        mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
+        mergegui_env$gt5[,] = mergegui_env$hstry3[[mergegui_env$idx]]
     }
 
     reset = function(h, ...) {
@@ -497,10 +499,16 @@ mergefunc = function(h, ...) {
             gt2[[i]][] = mergegui_env$hstry1[[1]][, i]
         }
         mergegui_env$redo.indicate = 1
-        mergegui_env$gt4[, 2] = nameintersect
-        mergegui_env$gt4[, 3] = var.class(nametable,dataset)
-        gt5[, 2] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 2]
-        gt5[, 3] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 3]
+        mergegui_env$gt4[, ] = mergegui_env$hstry2[[1]]
+        mergegui_env$gt5[, ] = mergegui_env$hstry3[[1]]
+		
+		indicator1 = all(mergegui_env$hstry1[[length(mergegui_env$hstry1)]]==mergegui_env$hstry1[[1]])
+		indicator2 = all(mergegui_env$hstry2[[length(mergegui_env$hstry2)]]==mergegui_env$hstry2[[1]])
+		indicator3 = all(mergegui_env$hstry3[[length(mergegui_env$hstry3)]]==mergegui_env$hstry3[[1]])
+		mergegui_env$idx = ifelse(all(indicator1,indicator2,indicator3),length(mergegui_env$hstry1),length(mergegui_env$hstry1)+1)
+		mergegui_env$hstry1[[mergegui_env$idx]] = mergegui_env$hstry1[[1]]
+		mergegui_env$hstry2[[mergegui_env$idx]] = mergegui_env$hstry2[[1]]
+		mergegui_env$hstry3[[mergegui_env$idx]] = mergegui_env$hstry3[[1]]
     }
 
 	VariableOptions = function(h, ...) {
@@ -531,10 +539,10 @@ mergefunc = function(h, ...) {
                 if (svalue(gt4input12) != "") {
                   mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 2] = svalue(gt4input12)
                   mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 3] = svalue(gt4input22)
-                  gt5[mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 1], 2] = mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 2]
-                  gt5[mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 1], 3] = mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 3]
-                  mergegui_env$hstry2[[mergegui_env$idx]] <- mergegui_env$gt4[, 2]
-                  mergegui_env$hstry3[[mergegui_env$idx]] <- mergegui_env$gt4[, 3]
+                  mergegui_env$gt5[mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 1], 2] = mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 2]
+                  mergegui_env$gt5[mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 1], 3] = mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 3]
+                  mergegui_env$hstry2[[mergegui_env$idx]] <- mergegui_env$gt4[,]
+                  mergegui_env$hstry3[[mergegui_env$idx]] <- mergegui_env$gt5[,]
                   dispose(gt4input0)
                 }
                 else {
@@ -946,9 +954,9 @@ mergefunc = function(h, ...) {
 			checknamepanel[n+1]=all(mergegui_env$name_intersection_panel[,3]==mergegui_env$gt4[order(gt4col1),3])
 			if (!all(checknamepanel)){
 				mergegui_env$nameintersection <- mergegui_env$gt4[order(gt4col1),2]
-				scale1 <- scale.rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-				scale2 <- scale.kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-				scale3 <- scale.missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
+				scale1 <- scale_rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+				scale2 <- scale_kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+				scale3 <- scale_missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
 				mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),1:3],scale1,scale2,scale3,stringsAsFactors = FALSE)
 				colnames(mergegui_env$name_intersection_panel) <- c("Items", "Variables", "Class", "Unit","Dist","Miss")
 			}
@@ -992,7 +1000,7 @@ mergefunc = function(h, ...) {
     ##  We should write 'xxx.csv'                                  ##
     ##          when we export mergedata and save the file.        ##
     #####-------------------------------------------------------#####
-		name.select = svalue(gt5, index = TRUE)
+		name.select = svalue(mergegui_env$gt5, index = TRUE)
         if (length(name.select) == 0) {
             gmessage("Please select the variables!")
             return()
@@ -1002,8 +1010,8 @@ mergefunc = function(h, ...) {
         for (i in 1:n) {
             name.table[, i] = gt2[[i]][name.select, ]
         }
-        name.intersect = as.vector(svalue(gt5))
-        name.class = gt5[name.select, 3]
+        name.intersect = as.vector(svalue(mergegui_env$gt5))
+        name.class = mergegui_env$gt5[name.select, 3]
         mergedata = matrix(nrow = sum(rows), ncol = nrow(name.table) + 1)
         colnames(mergedata) = c("source", name.intersect)
 		setTxtProgressBar(txtpb, 0.05)
@@ -1123,7 +1131,8 @@ mergefunc = function(h, ...) {
         }
     }
 
-	if (exists("combo2",where=mergegui_env)) {
+	if (exists("combo2",where=mergegui_env,inherits=FALSE)) {
+	#if (!isExtant(mergegui_env$combo2)) {
 		dispose(mergegui_env$combo2)
 	}
     #####-------------------------------------------------------------------#####
@@ -1227,8 +1236,7 @@ mergefunc = function(h, ...) {
     #####-------------------------------#####
     ##  New window for matching variables  ##
     #####-------------------------------#####
- 	mergegui_env$combo2 = gwindow("Matched Variables", visible = T, width = 900,
-        height = 600)
+ 	mergegui_env$combo2 = gwindow("Matched Variables", visible = T, width = 900, height = 600)
     tab = gnotebook(container = mergegui_env$combo2)
 	if (exists("name_intersection_panel",where=mergegui_env)){
 		rm("name_intersection_panel",envir=mergegui_env)
@@ -1239,8 +1247,7 @@ mergefunc = function(h, ...) {
     ##  (1) Determine the scaling way.               ##
     ##  (2) Determine whether show p-values or not.  ##
     #####-----------------------------------------#####
-	group11 = ggroup(horizontal = FALSE, cont = tab, label = "Preferences",
-        expand = T)
+	group11 = ggroup(horizontal = FALSE, cont = tab, label = "Preferences", expand = T)
     frame12 = gframe("Scaling of histograms",container = group11, horizontal = FALSE)
 	radio121 <- gradio(c("regular y scale","relative y scale"),container = frame12)
 	frame13 = gframe("Flag for variables",container = group11, horizontal = FALSE)
@@ -1251,20 +1258,27 @@ mergefunc = function(h, ...) {
     ##  (1) Switch the variable names in the same gtable. ##
     ##  (2) Go back or go forth or reset the matching.    ##
     #####----------------------------------------------#####
-    group21 = ggroup(horizontal = FALSE, cont = tab, label = "Matching",
-        expand = T)
-    group22 = ggroup(container = group21, use.scrollwindow = TRUE,
-        expand = T)
+    group21 = ggroup(horizontal = FALSE, cont = tab, label = "Matching", expand = T)
+    group22 = ggroup(container = group21, use.scrollwindow = TRUE, expand = T)
     group2 = list()
     gt2 <- list()
+	
     mergegui_env$hstry1 <- list()
     mergegui_env$hstry1[[1]] <- nametable
+	
+    mergegui_env$name_intersection_panel <- data.frame(1:length(nameintersect), nameintersect,var.class(nametable,dataset), scale_rpart(nametable,dataset,nameintersect), scale_kstest(nametable,dataset,nameintersect),scale_missing(nametable,dataset,nameintersect), stringsAsFactors = FALSE)
+    colnames(mergegui_env$name_intersection_panel) = c("Items", "Variables", "Class", "Unit","Dist","Miss")
     mergegui_env$hstry2 <- list()
-    mergegui_env$hstry2[[1]] <- nameintersect
+    mergegui_env$hstry2[[1]] <- mergegui_env$name_intersection_panel
+	
+	Matched = substr(rownames(nametable),5,regexpr('-',rownames(nametable))-1)
+	FileMatched = as.character((n+1)-as.integer(Matched))
     mergegui_env$hstry3 <- list()
-    mergegui_env$hstry3[[1]] <- var.class(nametable,dataset)
+    mergegui_env$hstry3[[1]] <- data.frame(mergegui_env$name_intersection_panel[,1:3],FileMatched)
+	
     mergegui_env$idx <- 1
     mergegui_env$redo.indicate <- 0
+	
     for (i in 1:n) {
         group2[[i]] = ggroup(horizontal = FALSE, container = group22,
             expand = T)
@@ -1288,10 +1302,10 @@ mergefunc = function(h, ...) {
                   mergegui_env$gt4[mergegui_env$gt4[,1]==prev.idx, 2:3] = mergegui_env$gt4[mergegui_env$gt4[,1]==svalue(gt.tmp, index = TRUE), 2:3]
                   mergegui_env$gt4[mergegui_env$gt4[,1]==svalue(gt.tmp, index = TRUE), 2:3] = tmpgt4
                 }
-                mergegui_env$hstry2[[mergegui_env$idx]] <- mergegui_env$gt4[, 2]
-                mergegui_env$hstry3[[mergegui_env$idx]] <- mergegui_env$gt4[, 3]
-                gt5[, 2] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 2]
-                gt5[, 3] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 3]
+				mergegui_env$gt5[, 2] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 2]
+                mergegui_env$gt5[, 3] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 3]
+                mergegui_env$hstry2[[mergegui_env$idx]] <- mergegui_env$gt4[,]
+                mergegui_env$hstry3[[mergegui_env$idx]] <- mergegui_env$gt5[,]
                 mergegui_env$redo.indicate <- 0
             }
             tag(gt.tmp, "toggle") = !tag(gt.tmp, "toggle")
@@ -1314,8 +1328,6 @@ mergefunc = function(h, ...) {
     #####------------------------------------------------#####
     group41 = ggroup(cont = tab, label = "Summary", expand = T)
     mergegui_env$group42 <- ggroup(container = group41, use.scrollwindow = TRUE, expand = T)
-    mergegui_env$name_intersection_panel <- data.frame(1:length(nameintersect), nameintersect,var.class(nametable,dataset), scale.rpart(nametable,dataset,nameintersect), scale.kstest(nametable,dataset,nameintersect),scale.missing(nametable,dataset,nameintersect), stringsAsFactors = FALSE)
-    colnames(mergegui_env$name_intersection_panel) = c("Items", "Variables", "Class", "Unit","Dist","Miss")
 	
     mergegui_env$gt4 <- gtable(mergegui_env$name_intersection_panel, multiple = T, container = mergegui_env$group42, expand = TRUE, chosencol = 2)
     addhandlerdoubleclick(mergegui_env$gt4, handler = VariableOptions)
@@ -1338,24 +1350,22 @@ mergefunc = function(h, ...) {
     group51 = ggroup(container = tab, label = "Export", expand = T)
     group52 = ggroup(container = group51, use.scrollwindow = TRUE,
         expand = T)
-	Matched = substr(rownames(nametable),5,regexpr('-',rownames(nametable))-1)
-	FileMatched = as.character((n+1)-as.integer(Matched))
-    gt5 <- gtable(data.frame(mergegui_env$name_intersection_panel[,1:3],FileMatched), multiple = T, container = group52,
+    mergegui_env$gt5 <- gtable(data.frame(mergegui_env$name_intersection_panel[,1:3],FileMatched), multiple = T, container = group52,
         expand = TRUE, chosencol = 2)
-	addhandlerclicked(gt5,handler=function(h,...){
-		svalue(gbcombo57) = paste("Currently you select",length(svalue(gt5)),"variables.",sep=" ")
+	addhandlerclicked(mergegui_env$gt5,handler=function(h,...){
+		svalue(gbcombo57) = paste("Currently you select",length(svalue(mergegui_env$gt5)),"variables.",sep=" ")
 	})
     group53 = ggroup(horizontal = FALSE, container = group51,
         expand = TRUE)
     gbcombo51 <- gbutton("Select All", container = group53, handler = function(h,
         ...) {
-        svalue(gt5, index = TRUE) = 1:length(nameintersect)
+        svalue(mergegui_env$gt5, index = TRUE) = 1:length(nameintersect)
 		svalue(gbcombo57) = paste("Currently you select all",length(nameintersect),"variables.",sep=" ")
-        focus(gt5)
+        focus(mergegui_env$gt5)
     })
     gbcombo52 <- gbutton("Clear All", container = group53, handler = function(h,
         ...) {
-        svalue(gt5) = NULL
+        svalue(mergegui_env$gt5) = NULL
 		svalue(gbcombo57) = "Currently you select 0 variable."
     })
     gbcombo55 <- gbutton("Export the matched data", container = group53,
@@ -1478,11 +1488,12 @@ mergeID = function(h, ...) {
 
 	combo <- gwindow("Combination", visible = TRUE)
 	group <- ggroup(horizontal = FALSE, container = combo)
-	f.list <- matrix(nrow = 0, ncol = 1, dimnames = list(NULL,
-		"File"))
-
-	gt <- gtable(f.list, multiple = T, container = group,
-		expand = T)
+	if (is.null(filenames)) {
+		f.list <- matrix(nrow = 0, ncol = 1, dimnames = list(NULL, "File"))
+	} else {
+		f.list <- matrix(filenames, ncol = 1, dimnames = list(NULL, "File"))
+	}
+	gt <- gtable(f.list, multiple = T, container = group, expand = TRUE)
 	gb1 <- gbutton("Open", container = group, handler = function(h, ...) gt[,] = union(gt[,],na.omit(gfile(multiple=TRUE))))
 	gb2 <- gbutton("Match the Variables", container = group,
 		handler = mergefunc)
