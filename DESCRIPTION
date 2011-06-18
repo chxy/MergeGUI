@@ -1,8 +1,8 @@
 Package: MergeGUI
 Type: Package
 Title: A GUI for Merging Datasets in R
-Version: 0.1-0
-Date: 2011-02-11
+Version: 0.1-1
+Date: 2011-06-18
 Author: Xiaoyue Cheng, Dianne Cook, Heike Hofmann
 Maintainer: Xiaoyue Cheng <xycheng@iastate.edu>
 Description: A GUI for merging datasets in R using gWidgets.
