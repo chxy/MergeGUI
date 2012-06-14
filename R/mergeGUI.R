@@ -441,12 +441,18 @@ scale_missing = function(nametable.class, dataset.class, name.class) {
 ##' if (interactive()) {
 ##' MergeGUI()
 ##' 
-##' csvnames=list.files(system.file("doc",package="MergeGUI"),pattern = "\\\\.csv$")
-##' filenames=system.file("doc",csvnames,package="MergeGUI")
-##' MergeGUI(filenames)
+##' csvnames=list.files(system.file("doc",package="MergeGUI"),pattern = "\\.csv$")
+##' files=system.file("doc",csvnames,package="MergeGUI")
+##' MergeGUI(filenames=files)
+##' 
+##' data(iris)
+##' setosa=iris[iris$Species=="setosa",1:4]
+##' versicolor=iris[iris$Species=="versicolor",1:4]
+##' virginica=iris[iris$Species=="virginica",1:4]
+##' MergeGUI(setosa,versicolor,virginica)
 ##' }
 ##'
-MergeGUI = function(filenames=NULL) {
+MergeGUI = function(..., filenames=NULL) {
 	mergegui_env = new.env()
 
 mergefunc = function(h, ...) {
@@ -511,7 +517,7 @@ mergefunc = function(h, ...) {
 		mergegui_env$hstry3[[mergegui_env$idx]] = mergegui_env$hstry3[[1]]
     }
 
-	VariableOptions = function(h, ...) {
+	  VariableOptions = function(h, ...) {
     #####------------------------------------------------------#####
     ##  VariableOptions is the handler when double clicking gt4.  ##
     ##  It gives a new window for                                 ##
@@ -931,7 +937,7 @@ mergefunc = function(h, ...) {
         }
     }
 
-	change = function(h,...) {
+    change = function(h,...) {
 		flagsym = svalue(radio131)
 
 		if (flagsym=="Do not show p-values or flags") {
@@ -1164,7 +1170,9 @@ mergefunc = function(h, ...) {
 	}
 
     for (i in 1:n) {
-        dataset[[i]] <- read.csv(file = gtfile[i], head = TRUE)
+        dataset[[i]] <- if (length(grep("\\.csv$",gtfile[i]))) {
+            read.csv(file = gtfile[i], head = T)
+        } else { gtdata[[i]] }
         rows[i] <- nrow(dataset[[i]])
         vname[[i]] <- colnames(dataset[[i]])
         J = gregexpr(".csv.", vname[[i]])
@@ -1443,7 +1451,9 @@ mergeID = function(h, ...) {
     }
     rows <- rep(0, n)
     for (i in 1:n) {
-        dataset[[i]] <- read.csv(file = gtfile[i], head = T)
+        dataset[[i]] <- if (length(grep("\\.csv$",gtfile[i]))) {
+           read.csv(file = gtfile[i], head = T)
+        } else { gtdata[[i]] }
         rows[i] <- nrow(dataset[[i]])
         vname[[i]] <- colnames(dataset[[i]])
         J = gregexpr(".csv.", vname[[i]])
@@ -1485,13 +1495,17 @@ mergeID = function(h, ...) {
 	#####---------------------#####
 	##  First GUI:  Open files.  ##
 	#####---------------------#####
-
+	gtdata=list(...)
+  mycall <- as.list(match.call()[-1])
+  datasets <- as.character(unlist(mycall))
+  if (!missing(filenames)) datasets <- datasets[-length(datasets)]
+  
 	combo <- gwindow("Combination", visible = TRUE)
 	group <- ggroup(horizontal = FALSE, container = combo)
-	if (is.null(filenames)) {
+	if (is.null(filenames) & is.null(datasets)) {
 		f.list <- matrix(nrow = 0, ncol = 1, dimnames = list(NULL, "File"))
 	} else {
-		f.list <- matrix(filenames, ncol = 1, dimnames = list(NULL, "File"))
+		f.list <- matrix(c(datasets,filenames), ncol = 1, dimnames = list(NULL, "File"))
 	}
 	gt <- gtable(f.list, multiple = T, container = group, expand = TRUE)
 	gb1 <- gbutton("Open", container = group, handler = function(h, ...) gt[,] = union(gt[,],na.omit(gfile(multiple=TRUE))))
