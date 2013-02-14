@@ -452,7 +452,7 @@ scale_missing = function(nametable.class, dataset.class, name.class) {
 ##' MergeGUI(setosa,versicolor,virginica)
 ##' }
 ##'
-MergeGUI = function(..., filenames=NULL) {
+MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
     mergegui_env = new.env()
     
     mergefunc = function(h, ...) {
@@ -468,7 +468,7 @@ MergeGUI = function(..., filenames=NULL) {
                 mergegui_env$idx <- 1
             }
             for (i in 1:n) {
-                gt2[[i]][] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
+                gt2[[i]][,2] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
             }
             mergegui_env$redo.indicate <- 1
             mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
@@ -490,7 +490,7 @@ MergeGUI = function(..., filenames=NULL) {
                 mergegui_env$idx <- length(mergegui_env$hstry1)
             }
             for (i in 1:n) {
-                gt2[[i]][] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
+                gt2[[i]][,2] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
             }
             mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
             mergegui_env$gt5[,] = mergegui_env$hstry3[[mergegui_env$idx]]
@@ -502,7 +502,7 @@ MergeGUI = function(..., filenames=NULL) {
             ##  reset button.                                            ##
             #####-----------------------------------------------------#####
             for (i in 1:n) {
-                gt2[[i]][] = mergegui_env$hstry1[[1]][, i]
+                gt2[[i]][,2] = mergegui_env$hstry1[[1]][, i]
             }
             mergegui_env$redo.indicate = 1
             mergegui_env$gt4[, ] = mergegui_env$hstry2[[1]]
@@ -575,7 +575,7 @@ MergeGUI = function(..., filenames=NULL) {
             }
             name.table = matrix(nrow = length(name.select), ncol = n)
             for (i in 1:n) {
-                name.table[, i] = gt2[[i]][mergegui_env$gt4[name.select,1], ]
+                name.table[, i] = gt2[[i]][mergegui_env$gt4[name.select,1],2]
             }
             name.intersect = as.vector(svalue(mergegui_env$gt4))
             name.class = mergegui_env$gt4[name.select, 3]
@@ -712,7 +712,7 @@ MergeGUI = function(..., filenames=NULL) {
             if (length(name.select)==1) {
                 name.table = rep(NA, n)
                 for (i in 1:n) {
-                    name.table[i] = gt2[[i]][mergegui_env$gt4[name.select,1], ]
+                    name.table[i] = gt2[[i]][mergegui_env$gt4[name.select,1], 2]
                 }
                 name.intersect = as.character(mergegui_env$gt4[name.select,2])
                 name.class = as.character(mergegui_env$gt4[name.select, 3])
@@ -774,7 +774,7 @@ MergeGUI = function(..., filenames=NULL) {
             if (length(name.select)==2) {
                 name.table = matrix(NA, ncol=n, nrow=2)
                 for (i in 1:n) {
-                    name.table[,i] = gt2[[i]][mergegui_env$gt4[name.select,1], ]
+                    name.table[,i] = gt2[[i]][mergegui_env$gt4[name.select,1], 2]
                 }
                 name.intersect = as.character(mergegui_env$gt4[name.select,2])
                 name.class = as.character(mergegui_env$gt4[name.select, 3])
@@ -825,7 +825,7 @@ MergeGUI = function(..., filenames=NULL) {
                 z = length(name.select)
                 name.table = matrix(NA, ncol=n, nrow=z)
                 for (i in 1:n) {
-                    name.table[,i] = gt2[[i]][mergegui_env$gt4[name.select,1], ]
+                    name.table[,i] = gt2[[i]][mergegui_env$gt4[name.select,1], 2]
                 }
                 name.intersect = as.character(mergegui_env$gt4[name.select,2])
                 name.class = as.character(mergegui_env$gt4[name.select, 3])
@@ -888,7 +888,7 @@ MergeGUI = function(..., filenames=NULL) {
             }
             name.table = matrix(nrow = length(name.select), ncol = n)
             for (i in 1:n) {
-                name.table[, i] = gt2[[i]][mergegui_env$gt4[name.select,1], ]
+                name.table[, i] = gt2[[i]][mergegui_env$gt4[name.select,1], 2]
             }
             name.intersect = as.vector(svalue(mergegui_env$gt4))
             name.class = mergegui_env$gt4[name.select, 3]
@@ -954,38 +954,36 @@ MergeGUI = function(..., filenames=NULL) {
             } else {
                 checknamepanel=c()
                 for (i in 1:n) {
-                    checknamepanel[i]=all(mergegui_env$namepanel[,i]==gt2[[i]][,])
-                    if (!checknamepanel[i]) mergegui_env$namepanel[,i]<-gt2[[i]][,]
+                    checknamepanel[i]=all(mergegui_env$namepanel[,i]==gt2[[i]][,2], na.rm = TRUE)
+                    if (!checknamepanel[i]) mergegui_env$namepanel[,i]<-gt2[[i]][,2]
                 }
-                checknamepanel[n+1]=all(mergegui_env$name_intersection_panel[,3]==mergegui_env$gt4[order(gt4col1),3])
+                checknamepanel[n+1]=all(mergegui_env$name_intersection_panel[,3]==mergegui_env$gt4[order(gt4col1),3], na.rm = TRUE)
                 if (!all(checknamepanel)){
                     mergegui_env$nameintersection <- mergegui_env$gt4[order(gt4col1),2]
-                    scale1 <- scale_rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-                    scale2 <- scale_kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
-                    scale3 <- scale_missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
-                    mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),1:3],scale1,scale2,scale3,stringsAsFactors = FALSE)
-                    colnames(mergegui_env$name_intersection_panel) <- c("Items", "Variables", "Class", "Unit","Dist","Miss")
+                    mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),1:3],stringsAsFactors = FALSE)
+                    colnames(mergegui_env$name_intersection_panel) <- c("Items", "Variables", "Class")
+                    if (unit) mergegui_env$name_intersection_panel$Unit <- scale_rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+                    
+                    if (distn) mergegui_env$name_intersection_panel$Dist <- scale_kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
+                    if (miss) mergegui_env$name_intersection_panel$Miss <- scale_missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
                 }
             }
             mergegui_env$name_intersection_panel[,2]=mergegui_env$gt4[order(gt4col1),2]
             delete(mergegui_env$group42, mergegui_env$gt4)
             
             if (flagsym=="Show the flag symbol") {
-                flag1 = !is.na(mergegui_env$name_intersection_panel[,4:6])
-                flag2 = sapply(mergegui_env$name_intersection_panel[,4:6],function(avec){
-                    as.numeric(as.character(avec))<0.05
-                })
+                flag1 = !is.na(mergegui_env$name_intersection_panel[,-(1:3)])
+                flag2 = sapply(mergegui_env$name_intersection_panel[,-(1:3)],
+                               function(avec){
+                                   as.numeric(as.character(avec))<0.05
+                               })
                 flag = flag1 & flag2
                 newgt4 = mergegui_env$name_intersection_panel
-                newgt4[,4]<-as.character(newgt4[,4])
-                newgt4[,5]<-as.character(newgt4[,5])
-                newgt4[,6]<-as.character(newgt4[,6])
-                newgt4[flag[,1],4] <- "X"
-                newgt4[flag[,2],5] <- "X"
-                newgt4[flag[,3],6] <- "X"
-                newgt4[!flag[,1],4] <- ""
-                newgt4[!flag[,2],5] <- ""
-                newgt4[!flag[,3],6] <- ""
+                for (j in 4:ncol(newgt4)) {
+                    newgt4[,j] = as.character(newgt4[,j])
+                    newgt4[flag[,j-3],j] <- "X"
+                    newgt4[!flag[,j-3],j] <- ""
+                }
                 mergegui_env$gt4 <- gtable(newgt4[gt4col1,], multiple = T, container = mergegui_env$group42, expand = TRUE, chosencol = 2)
                 addhandlerdoubleclick(mergegui_env$gt4, handler = VariableOptions)
             } else {
@@ -1014,7 +1012,7 @@ MergeGUI = function(..., filenames=NULL) {
             txtpb = txtProgressBar(min=0,max=1,width = 40,style=3)
             name.table = matrix(nrow = length(name.select), ncol = n)
             for (i in 1:n) {
-                name.table[, i] = gt2[[i]][name.select, ]
+                name.table[, i] = gt2[[i]][name.select, 2]
             }
             name.intersect = as.vector(svalue(mergegui_env$gt5))
             name.class = mergegui_env$gt5[name.select, 3]
@@ -1257,9 +1255,15 @@ MergeGUI = function(..., filenames=NULL) {
         #####-----------------------------------------#####
         group11 = ggroup(horizontal = FALSE, cont = tab, label = "Preferences", expand = T)
         frame12 = gframe("Scaling of histograms",container = group11, horizontal = FALSE)
-        radio121 <- gradio(c("regular y scale","relative y scale"),container = frame12)
+        radio121 = gradio(c("regular y scale","relative y scale"),container = frame12)
         frame13 = gframe("Flag for variables",container = group11, horizontal = FALSE)
-        radio131 <- gradio(c("Show p-values","Show the flag symbol","Do not show p-values or flags"), container = frame13, handler=change)
+        radio131 = gradio(c("Show p-values","Show the flag symbol","Do not show p-values or flags"), container = frame13)
+        if (!unit & !distn & !miss) {
+            svalue(radio131) = "Do not show p-values or flags"
+            enabled(radio131) = FALSE
+        } else {
+            addHandlerChanged(radio131, handler=change)
+        }
         
         #####----------------------------------------------#####
         ##  In the second tab we can:                         ##
@@ -1274,8 +1278,14 @@ MergeGUI = function(..., filenames=NULL) {
         mergegui_env$hstry1 <- list()
         mergegui_env$hstry1[[1]] <- nametable
         
-        mergegui_env$name_intersection_panel <- data.frame(1:length(nameintersect), nameintersect,var.class(nametable,dataset), scale_rpart(nametable,dataset,nameintersect), scale_kstest(nametable,dataset,nameintersect),scale_missing(nametable,dataset,nameintersect), stringsAsFactors = FALSE)
-        colnames(mergegui_env$name_intersection_panel) = c("Items", "Variables", "Class", "Unit","Dist","Miss")
+        mergegui_env$name_intersection_panel <- data.frame(
+            Items=1:length(nameintersect), 
+            Variables=nameintersect,
+            Class=var.class(nametable,dataset),
+            stringsAsFactors = FALSE)
+        if (unit) mergegui_env$name_intersection_panel$Unit = scale_rpart(nametable,dataset,nameintersect)
+        if (distn) mergegui_env$name_intersection_panel$Dist = scale_kstest(nametable,dataset,nameintersect)
+        if (miss) mergegui_env$name_intersection_panel$Miss = scale_missing(nametable,dataset,nameintersect)
         mergegui_env$hstry2 <- list()
         mergegui_env$hstry2[[1]] <- mergegui_env$name_intersection_panel
         
@@ -1290,8 +1300,7 @@ MergeGUI = function(..., filenames=NULL) {
         for (i in 1:n) {
             group2[[i]] = ggroup(horizontal = FALSE, container = group22,
                                  expand = T)
-            gt2[[i]] <- gtable(nametable[, i, drop = F], container = group2[[i]],
-                               expand = TRUE)
+            gt2[[i]] <- gtable(data.frame(rowname=rownames(nametable),nametable[, i, drop = F],stringsAsFactors = FALSE), chosencol = 2, container = group2[[i]], expand = TRUE)
             tag(gt2[[i]], "prev.idx") <- svalue(gt2[[i]], index = TRUE)
             tag(gt2[[i]], "toggle") <- FALSE
             tag(gt2[[i]], "idx") <- i
@@ -1299,12 +1308,12 @@ MergeGUI = function(..., filenames=NULL) {
                 gt.tmp = h$obj
                 prev.idx = tag(gt.tmp, "prev.idx")
                 if (length(prev.idx) == 1 && tag(gt.tmp, "toggle")) {
-                    tmp = gt.tmp[prev.idx, ]
-                    gt.tmp[prev.idx, ] = svalue(gt.tmp)
-                    gt.tmp[svalue(gt.tmp, index = TRUE), ] = tmp
+                    tmp = gt.tmp[prev.idx, 2]
+                    gt.tmp[prev.idx, 2] = svalue(gt.tmp)
+                    gt.tmp[svalue(gt.tmp, index = TRUE), 2] = tmp
                     mergegui_env$idx <- mergegui_env$idx + 1
                     mergegui_env$hstry1[[mergegui_env$idx]] <- mergegui_env$hstry1[[mergegui_env$idx - 1]]
-                    mergegui_env$hstry1[[mergegui_env$idx]][, tag(gt.tmp, "idx")] <- gt.tmp[]
+                    mergegui_env$hstry1[[mergegui_env$idx]][, tag(gt.tmp, "idx")] <- gt.tmp[,2]
                     if (tag(gt.tmp, "idx") == 1) {
                         tmpgt4 = mergegui_env$gt4[mergegui_env$gt4[,1]==prev.idx, 2:3]
                         mergegui_env$gt4[mergegui_env$gt4[,1]==prev.idx, 2:3] = mergegui_env$gt4[mergegui_env$gt4[,1]==svalue(gt.tmp, index = TRUE), 2:3]
@@ -1497,8 +1506,11 @@ MergeGUI = function(..., filenames=NULL) {
     #####---------------------#####
     gtdata=list(...)
     mycall <- as.list(match.call()[-1])
-    datasets <- as.character(unlist(mycall))
-    if (!missing(filenames)) datasets <- datasets[-length(datasets)]
+    if (!missing(filenames)) mycall <- mycall[names(mycall)!='filenames']
+    if (!missing(unit)) mycall <- mycall[names(mycall)!='unit']
+    if (!missing(distn)) mycall <- mycall[names(mycall)!='distn']
+    if (!missing(miss)) mycall <- mycall[names(mycall)!='miss']
+    datasets = as.character(unlist(mycall))
     
     combo <- gwindow("Combination", visible = TRUE)
     group <- ggroup(horizontal = FALSE, container = combo)
