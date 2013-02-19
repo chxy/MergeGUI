@@ -1268,8 +1268,8 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         } else {
             addHandlerChanged(radio131, handler=changetest)
         }
-        frame14 = gframe("Shortcut for matching tab",container = group11, horizontal = FALSE)
-        radio141 = gradio(c("Show all the variable names","Show only the unmatched variables"), container = frame14, handler = changematching)
+        frame14 = gframe("View mode of the matching tab",container = group11, horizontal = FALSE)
+        radio141 = gcheckboxgroup(c("Matched variables","Half-matched variables","Completely unmatched variables"), checked = TRUE, container = frame14, handler = changematching)
         
         #####----------------------------------------------#####
         ##  In the second tab we can:                         ##
