@@ -937,7 +937,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             }
         }
         
-        change = function(h,...) {
+        changetest = function(h,...) {
             flagsym = svalue(radio131)
             
             if (flagsym=="Do not show p-values or flags") {
@@ -990,6 +990,10 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 mergegui_env$gt4 <- gtable(mergegui_env$name_intersection_panel[gt4col1,], multiple = T,container = mergegui_env$group42, expand = TRUE, chosencol = 2)
                 addhandlerdoubleclick(mergegui_env$gt4, handler = VariableOptions)
             }
+            
+        }
+        
+        changematching = function(h,...) {
             
         }
         
@@ -1262,8 +1266,10 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             svalue(radio131) = "Do not show p-values or flags"
             enabled(radio131) = FALSE
         } else {
-            addHandlerChanged(radio131, handler=change)
+            addHandlerChanged(radio131, handler=changetest)
         }
+        frame14 = gframe("Shortcut for matching tab",container = group11, horizontal = FALSE)
+        radio141 = gradio(c("Show all the variable names","Show only the unmatched variables"), container = frame14, handler = changematching)
         
         #####----------------------------------------------#####
         ##  In the second tab we can:                         ##
