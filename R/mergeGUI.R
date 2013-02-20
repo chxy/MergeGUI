@@ -938,6 +938,10 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         }
         
         changetest = function(h,...) {
+            #####-----------------------------------#####
+            ##  changetest is the handler of radio131  ##
+            ##  (gradio: Flag for variables)           ##
+            #####-----------------------------------#####
             flagsym = svalue(radio131)
             
             if (flagsym=="Do not show p-values or flags") {
@@ -994,7 +998,28 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         }
         
         changematching = function(h,...) {
-            
+            #####---------------------------------------#####
+            ##  changematching is the handler of check141  ##
+            ##  (gcheckboxgroup: View mode)                ##
+            #####---------------------------------------#####
+            viewmode = svalue(check141)
+            if (length(viewmode)==0) {
+                gmessage("You have to see something there. Please check at least one box.")
+                return()
+            }
+            vistable = mergegui_env$hstry1[[mergegui_env$idx]]
+            vispart = c()
+            if ("Matched variables" %in% viewmode){
+                tmppart = rownames(vistable)
+                
+                vispart = c(vispart, tmppart)
+            }
+            if ("Half-matched variables" %in% viewmode){
+                
+            }
+            if ("Unmatched variables" %in% viewmode){
+                
+            }
         }
         
         watchdatafunc = function(h, ...) {
@@ -1276,7 +1301,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             addHandlerChanged(radio131, handler=changetest)
         }
         frame14 = gframe("View mode of the matching tab",container = group11, horizontal = FALSE)
-        radio141 = gcheckboxgroup(c("Matched variables","Half-matched variables","Completely unmatched variables"), checked = TRUE, container = frame14, handler = changematching)
+        check141 = gcheckboxgroup(c("Matched variables","Half-matched variables","Unmatched variables"), checked = TRUE, container = frame14, handler = changematching)
         
         #####----------------------------------------------#####
         ##  In the second tab we can:                         ##
