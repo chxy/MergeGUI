@@ -509,7 +509,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             mergegui_env$gt5[, ] = mergegui_env$hstry3[[1]]
             
             indicator1 = all(mergegui_env$hstry1[[length(mergegui_env$hstry1)]]==mergegui_env$hstry1[[1]])
-            indicator2 = all(mergegui_env$hstry2[[length(mergegui_env$hstry2)]]==mergegui_env$hstry2[[1]])
+            indicator2 = all(mergegui_env$hstry2[[length(mergegui_env$hstry2)]][,1:3]==mergegui_env$hstry2[[1]][,1:3])
             indicator3 = all(mergegui_env$hstry3[[length(mergegui_env$hstry3)]]==mergegui_env$hstry3[[1]])
             mergegui_env$idx = ifelse(all(indicator1,indicator2,indicator3),length(mergegui_env$hstry1),length(mergegui_env$hstry1)+1)
             mergegui_env$hstry1[[mergegui_env$idx]] = mergegui_env$hstry1[[1]]
@@ -1203,13 +1203,15 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         ##          it cannot be intersected with any other files.  ##
         #####----------------------------------------------------#####
         a = intersect2(vname, simplifiedname)
-        nameintersect <- a$public
+        nameintersect = a$public
         tmpuniq = a$uniq
         tmpsimpleuniq = a$simpleuniq
-        nametable <- a$individual
+        nametable = a$individual
         if (nrow(nametable) != 0) {
-            rownames(nametable) <- paste("Part1-1-", 1:nrow(nametable),
-                                         sep = "")
+            tmpname = paste("Part1-1-", 1:nrow(nametable), sep = "")
+            tmpname[1:min(9,length(tmpname))] = paste("Part1-1-0", 
+                                                1:min(9,length(tmpname)), sep = "")
+            rownames(nametable) = tmpname
         }
         
         for (i in max((n - 1), 2):2) {
@@ -1220,9 +1222,11 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 tmptable = matrix(NA, ncol = n, nrow = length(tmpintersect$public))
                 tmptable[, combnmatrix[, j]] = tmpintersect$individual
                 if (nrow(tmptable) != 0) {
-                    rownames(tmptable) = paste("Part", n - i + 1,
-                                               "-", j, "-", 1:length(tmpintersect$public),
-                                               sep = "")
+                    tmpname = paste("Part", n - i + 1, "-", j, "-", 
+                                    1:length(tmpintersect$public), sep = "")
+                    tmpname[1:min(9,length(tmpname))] = paste("Part", n - i + 1, "-", j, "-0", 
+                                                        1:min(9,length(tmpname)), sep = "")
+                    rownames(tmptable) = tmpname
                 }
                 nametable <- rbind(nametable, tmptable)
                 nameintersect <- c(nameintersect, tmpintersect$public)
@@ -1236,8 +1240,11 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             tmptable = matrix(NA, ncol = n, nrow = length(tmpuniq[[i]]))
             tmptable[, i] = tmpuniq[[i]]
             if (nrow(tmptable) != 0) {
-                rownames(tmptable) = paste("Part", n, "-", i, "-",
-                                           1:nrow(tmptable), sep = "")
+                tmpname = paste("Part", n, "-", i, "-",
+                                1:nrow(tmptable), sep = "")
+                tmpname[1:min(9,length(tmpname))] = paste("Part", n, "-", i, "-0",
+                                                    1:min(9,length(tmpname)), sep = "")
+                rownames(tmptable) = tmpname
             }
             nametable <- rbind(nametable, tmptable)
         }
@@ -1307,13 +1314,14 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             group2[[i]] = ggroup(horizontal = FALSE, container = group22,
                                  expand = T)
             gt2[[i]] <- gtable(data.frame(rowname=rownames(nametable),nametable[, i, drop = F],stringsAsFactors = FALSE), chosencol = 2, container = group2[[i]], expand = TRUE)
+            addHandlerKeystroke(gt2[[i]], handler = function(h,...){})
             tag(gt2[[i]], "prev.idx") <- svalue(gt2[[i]], index = TRUE)
             tag(gt2[[i]], "toggle") <- FALSE
             tag(gt2[[i]], "idx") <- i
             addhandlerclicked(gt2[[i]], handler = function(h, ...) {
                 gt.tmp = h$obj
                 prev.idx = tag(gt.tmp, "prev.idx")
-                if (length(prev.idx) == 1 && tag(gt.tmp, "toggle")) {
+                if (length(prev.idx) == 1 && tag(gt.tmp, "toggle") && length(svalue(gt.tmp))>0 && svalue(gt.tmp)!=gt.tmp[prev.idx, 2]) {
                     tmp = gt.tmp[prev.idx, 2]
                     gt.tmp[prev.idx, 2] = svalue(gt.tmp)
                     gt.tmp[svalue(gt.tmp, index = TRUE), 2] = tmp
