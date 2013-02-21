@@ -468,7 +468,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 mergegui_env$idx <- 1
             }
             for (i in 1:n) {
-                gt2[[i]][,2] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
+                gt2[[i]][,] = data.frame(rowname=rownames(mergegui_env$hstry1[[mergegui_env$idx]]),mergegui_env$hstry1[[mergegui_env$idx]][, i, drop=FALSE],stringsAsFactors = FALSE)
             }
             mergegui_env$redo.indicate <- 1
             mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
@@ -490,7 +490,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 mergegui_env$idx <- length(mergegui_env$hstry1)
             }
             for (i in 1:n) {
-                gt2[[i]][,2] = mergegui_env$hstry1[[mergegui_env$idx]][, i]
+                gt2[[i]][,] = data.frame(rowname=rownames(mergegui_env$hstry1[[mergegui_env$idx]]),mergegui_env$hstry1[[mergegui_env$idx]][, i, drop=FALSE],stringsAsFactors = FALSE)
             }
             mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
             mergegui_env$gt5[,] = mergegui_env$hstry3[[mergegui_env$idx]]
@@ -502,19 +502,24 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             ##  reset button.                                            ##
             #####-----------------------------------------------------#####
             for (i in 1:n) {
-                gt2[[i]][,2] = mergegui_env$hstry1[[1]][, i]
+                gt2[[i]][,] = data.frame(rowname=rownames(nametable),nametable[, i, drop = F],stringsAsFactors = FALSE)
             }
             mergegui_env$redo.indicate = 1
             mergegui_env$gt4[, ] = mergegui_env$hstry2[[1]]
             mergegui_env$gt5[, ] = mergegui_env$hstry3[[1]]
-            
-            indicator1 = all(mergegui_env$hstry1[[length(mergegui_env$hstry1)]]==mergegui_env$hstry1[[1]])
-            indicator2 = all(mergegui_env$hstry2[[length(mergegui_env$hstry2)]][,1:3]==mergegui_env$hstry2[[1]][,1:3])
-            indicator3 = all(mergegui_env$hstry3[[length(mergegui_env$hstry3)]]==mergegui_env$hstry3[[1]])
-            mergegui_env$idx = ifelse(all(indicator1,indicator2,indicator3),length(mergegui_env$hstry1),length(mergegui_env$hstry1)+1)
+            if (mergegui_env$hstry4[[length(mergegui_env$hstry4)]]==length(mergegui_env$hstry4)) {
+                indicator1 = all(mergegui_env$hstry1[[length(mergegui_env$hstry1)]]==mergegui_env$hstry1[[1]])
+                indicator2 = all(mergegui_env$hstry2[[length(mergegui_env$hstry2)]][,1:3]==mergegui_env$hstry2[[1]][,1:3])
+                indicator3 = all(mergegui_env$hstry3[[length(mergegui_env$hstry3)]]==mergegui_env$hstry3[[1]])
+                mergegui_env$idx = ifelse(all(indicator1,indicator2,indicator3),length(mergegui_env$hstry1),length(mergegui_env$hstry1)+1)
+            } else {
+                mergegui_env$idx = length(mergegui_env$hstry1)+1
+            }            
             mergegui_env$hstry1[[mergegui_env$idx]] = mergegui_env$hstry1[[1]]
             mergegui_env$hstry2[[mergegui_env$idx]] = mergegui_env$hstry2[[1]]
             mergegui_env$hstry3[[mergegui_env$idx]] = mergegui_env$hstry3[[1]]
+            mergegui_env$hstry4[[mergegui_env$idx]] = mergegui_env$idx
+            svalue(check141,index=TRUE) = 1:3
         }
         
         VariableOptions = function(h, ...) {
@@ -1007,19 +1012,38 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 gmessage("You have to see something there. Please check at least one box.")
                 return()
             }
-            vistable = mergegui_env$hstry1[[mergegui_env$idx]]
+            vistable = mergegui_env$hstry1[[mergegui_env$hstry4[[mergegui_env$idx]]]]
+            visname = rownames(vistable)
             vispart = c()
             if ("Matched variables" %in% viewmode){
-                tmppart = rownames(vistable)
-                
-                vispart = c(vispart, tmppart)
+                tmppart = visname[grep("Part1-1-",visname)]
+                if (length(tmppart)>0) vispart = c(vispart, tmppart)
             }
             if ("Half-matched variables" %in% viewmode){
-                
+                tmppartidx = c(grep("Part1-1-",visname),grep(paste("Part",n,"-",sep=""),visname))
+                if (length(tmppartidx)) {
+                    tmppart = visname[-tmppartidx]
+                    vispart = c(vispart, tmppart)
+                }
             }
             if ("Unmatched variables" %in% viewmode){
-                
+                tmppart = visname[grep(paste("Part",n,"-",sep=""),visname)]
+                if (length(tmppart)>0) vispart = c(vispart, tmppart)
             }
+            if (length(vispart)==0) {
+                gmessage("No rows are selected. Please check one more box.")
+                return()
+            }
+            for (i in 1:n) {
+                gt2[[i]][,] = gt2[[i]][1:length(vispart),]
+                gt2[[i]][,1] = vispart
+                gt2[[i]][,2] = vistable[vispart, i]
+            }
+            mergegui_env$idx = mergegui_env$idx + 1
+            mergegui_env$hstry1[[mergegui_env$idx]] = vistable[vispart,]
+            mergegui_env$hstry2[[mergegui_env$idx]] = mergegui_env$gt4[,]
+            mergegui_env$hstry3[[mergegui_env$idx]] = mergegui_env$gt5[,]
+            mergegui_env$hstry4[[mergegui_env$idx]] = ifelse(length(viewmode)==3,mergegui_env$idx,mergegui_env$hstry4[[mergegui_env$idx-1]])
         }
         
         watchdatafunc = function(h, ...) {
@@ -1332,6 +1356,9 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         mergegui_env$hstry3 <- list()
         mergegui_env$hstry3[[1]] <- data.frame(mergegui_env$name_intersection_panel[,1:3],FileMatched)
         
+        mergegui_env$hstry4 <- list()
+        mergegui_env$hstry4[[1]] <- 1
+        
         mergegui_env$idx <- 1
         mergegui_env$redo.indicate <- 0
         
@@ -1346,7 +1373,10 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             addhandlerclicked(gt2[[i]], handler = function(h, ...) {
                 gt.tmp = h$obj
                 prev.idx = tag(gt.tmp, "prev.idx")
-                if (length(prev.idx) == 1 && tag(gt.tmp, "toggle") && length(svalue(gt.tmp))>0 && svalue(gt.tmp)!=gt.tmp[prev.idx, 2]) {
+                gt.tmp.svalue = paste(svalue(gt.tmp))
+                if (length(prev.idx) == 1 && tag(gt.tmp, "toggle") && 
+                length(gt.tmp.svalue)>0 && 
+                gt.tmp.svalue!=paste(gt.tmp[prev.idx, 2])) {
                     tmp = gt.tmp[prev.idx, 2]
                     gt.tmp[prev.idx, 2] = svalue(gt.tmp)
                     gt.tmp[svalue(gt.tmp, index = TRUE), 2] = tmp
@@ -1362,6 +1392,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     mergegui_env$gt5[, 3] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 3]
                     mergegui_env$hstry2[[mergegui_env$idx]] <- mergegui_env$gt4[,]
                     mergegui_env$hstry3[[mergegui_env$idx]] <- mergegui_env$gt5[,]
+                    if (length(svalue(check141))==3) {mergegui_env$hstry4[[mergegui_env$idx]] <- mergegui_env$idx} else {mergegui_env$hstry4[[mergegui_env$idx]] <- mergegui_env$hstry4[[mergegui_env$idx-1]]}
                     mergegui_env$redo.indicate <- 0
                 }
                 tag(gt.tmp, "toggle") = !tag(gt.tmp, "toggle")
