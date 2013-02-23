@@ -1019,7 +1019,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 tmppart = visname[grep("Part1-1-",visname)]
                 if (length(tmppart)>0) vispart = c(vispart, tmppart)
             }
-            if ("Half-matched variables" %in% viewmode){
+            if ("Partial-matched variables" %in% viewmode){
                 tmppartidx = c(grep("Part1-1-",visname),grep(paste("Part",n,"-",sep=""),visname))
                 if (length(tmppartidx)) {
                     tmppart = visname[-tmppartidx]
@@ -1219,6 +1219,10 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             warning('The input data set is not enough. More files are needed.')
             return()
         }
+        if (n>9) {
+            warning('Too many data sets! Please limit the number to 9.')
+            return()
+        }
         
         for (i in 1:n) {
             dataset[[i]] <- if (length(grep("\\.csv$",gtfile[i]))) {
@@ -1325,7 +1329,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             addHandlerChanged(radio131, handler=changetest)
         }
         frame14 = gframe("View mode of the matching tab",container = group11, horizontal = FALSE)
-        check141 = gcheckboxgroup(c("Matched variables","Half-matched variables","Unmatched variables"), checked = TRUE, container = frame14, handler = changematching)
+        check141 = gcheckboxgroup(c("Matched variables","Partial-matched variables","Unmatched variables"), checked = TRUE, container = frame14, handler = changematching)
         
         #####----------------------------------------------#####
         ##  In the second tab we can:                         ##
