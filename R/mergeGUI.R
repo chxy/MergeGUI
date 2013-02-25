@@ -116,15 +116,17 @@ var.class = function(nametable.class, dataset.class) {
     varclass = rep("NA", nrow(nametable.class))
     for (i in 1:nrow(nametable.class)) {
         notNAcolset = which(!is.na(nametable.class[i, ]))
-        notNAcol = NA
+        notNAcolclass = c()
         for (k in notNAcolset) {
-            if (sum(!is.na(dataset.class[[k]][, nametable.class[i,
-                                                                k]])) > 0)
-                notNAcol = k
+            if (sum(!is.na(dataset.class[[k]][, nametable.class[i, k]])) > 0)
+                notNAcolclass = c(notNAcolclass,class(dataset.class[[k]][,nametable.class[i, k]]))
         }
-        if (!is.na(notNAcol)) {
-            varclass[i] = class(dataset.class[[notNAcol]][,
-                                                          nametable.class[i, notNAcol]])
+        if (length(notNAcolclass) > 0) {
+            varclass[i] = if ('factor' %in% notNAcolclass) {"factor"} else {
+                if ('character' %in% notNAcolclass) {'character'} else {
+                    if ('numeric' %in% notNAcolclass) {'numeric'} else {'integer'}
+                }
+            }
         }
     }
     return(varclass)
@@ -541,8 +543,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             gt4input12 = gedit(text = svalue(mergegui_env$gt4), container = gt4input1,
                                expand = TRUE)
             gt4input21 = glabel("Class:", container = gt4input2)
-            gt4input22 = gcombobox(union(mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE),
-                                                          3], c("integer", "numeric", "character", "factor")),
+            gt4input22 = gcombobox(union(mergegui_env$gt4[svalue(mergegui_env$gt4, index = TRUE), 3], c("integer", "numeric", "character", "factor")),
                                    container = gt4input2, expand = TRUE)
             
             gt4input31 = gbutton("Ok", container = gt4input3, expand = TRUE,
@@ -590,25 +591,20 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     if (name.class[i] == "numeric" | name.class[i] ==
                         "integer") {
                         summarytable[[i]] = matrix(NA, ncol = n, nrow = 7,
-                                                   dimnames = list(c("size", "NA#s", "mean",
-                                                                     "std", "min", "median", "max"),
-                                                                   simplifynames(gsub('.csv','',basename(gtfile)))))
+                                            dimnames = list(c("size", "NA#s", "mean",
+                                            "std", "min", "median", "max"),
+                                            simplifynames(gsub('.csv','',basename(gtfile)))))
                         names(summarytable)[i] = name.intersect[i]
                         for (j in 1:n) {
                             if (!is.na(name.table[i, j])) {
-                                tmpdata = dataset[[j]][, name.table[i,
-                                                                    j]]
+                                tmpdata = dataset[[j]][, name.table[i, j]]
                                 summarytable[[i]][1, j] = length(tmpdata)
                                 summarytable[[i]][2, j] = sum(is.na(tmpdata))
-                                summarytable[[i]][3, j] = mean(tmpdata,
-                                                               na.rm = TRUE)
+                                summarytable[[i]][3, j] = mean(tmpdata, na.rm = TRUE)
                                 summarytable[[i]][4, j] = sd(tmpdata, na.rm = TRUE)
-                                summarytable[[i]][5, j] = min(tmpdata,
-                                                              na.rm = TRUE)
-                                summarytable[[i]][6, j] = median(tmpdata,
-                                                                 na.rm = TRUE)
-                                summarytable[[i]][7, j] = max(tmpdata,
-                                                              na.rm = TRUE)
+                                summarytable[[i]][5, j] = min(tmpdata, na.rm = TRUE)
+                                summarytable[[i]][6, j] = median(tmpdata, na.rm = TRUE)
+                                summarytable[[i]][7, j] = max(tmpdata, na.rm = TRUE)
                             }
                         }
                         summarytable[[i]] = data.frame(t(summarytable[[i]]))
@@ -623,18 +619,18 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     }
                     else {
                         summarytable[[i]] = matrix(NA, ncol = n, nrow = 10,
-                                                   dimnames = list(c("size", "NA#s", "levels",
-                                                                     "matched levels", "top 1 level", "amount 1",
-                                                                     "top 2 level", "amount 2", "top 3 level", "amount 3"),
-                                                                   simplifynames(gsub('.csv','',basename(gtfile)))))
+                                            dimnames = list(c("size", "NA#s", "levels",
+                                            "matched levels", "top 1 level", "amount 1",
+                                            "top 2 level", "amount 2",
+                                            "top 3 level", "amount 3"),
+                                            simplifynames(gsub('.csv','',basename(gtfile)))))
                         names(summarytable)[i] = name.intersect[i]
                         matchedlevels = list()
                         for (j in 1:n) {
                             if (!is.na(name.table[i, j])) {
-                                if (sum(!is.na(dataset[[j]][, name.table[i,
-                                                                         j]])) > 0) {
+                                if (sum(!is.na(dataset[[j]][, name.table[i, j]])) > 0) {
                                     matchedlevels[[j]] = names(table(dataset[[j]][,
-                                                                                  name.table[i, j]], useNA = "no"))
+                                                         name.table[i, j]], useNA = "no"))
                                 }
                                 else {
                                     matchedlevels[[j]] = NA
@@ -647,8 +643,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                         mtch = intersect2(matchedlevels, matchedlevels)
                         for (j in 1:n) {
                             if (!is.na(name.table[i, j])) {
-                                tmpdata = dataset[[j]][, name.table[i,
-                                                                    j]]
+                                tmpdata = dataset[[j]][, name.table[i, j]]
                                 tmptable = sort(table(tmpdata, useNA = "no"),
                                                 decreasing = TRUE)
                                 summarytable[[i]][1, j] = length(tmpdata)
@@ -1067,41 +1062,48 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             for (i in 1:n) {
                 name.table[, i] = gt2[[i]][name.select, 2]
             }
+            colnames(name.table)=gsub("\\.csv$","",basename(gtfile))
             name.intersect = as.vector(svalue(mergegui_env$gt5))
             name.class = mergegui_env$gt5[name.select, 3]
             mergedata = matrix(nrow = sum(rows), ncol = nrow(name.table) + 1)
             colnames(mergedata) = c("source", name.intersect)
+            mergedatadictionary = data.frame(namecode=gt2[[1]][name.select, 1],
+                                             newname=name.intersect,
+                                             class=name.class,
+                                             name.table, stringsAsFactors=FALSE)
+            rownames(mergedatadictionary) = name.intersect
             setTxtProgressBar(txtpb, 0.05)
             for (i in 1:n) {
-                tmp = matrix(c(rep(basename(gtfile[i]), rows[i]),
+                tmp = matrix(c(rep(gsub("\\.csv$","",basename(gtfile[i])), rows[i]),
                                rep(NA, rows[i] * nrow(name.table))), nrow = rows[i])
                 colnames(tmp) = c("source", name.table[, i])
                 tmp[, na.omit(name.table[, i])] = as.matrix(dataset[[i]])[,
-                                                                          na.omit(name.table[, i])]
-                mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],
-                          ] = tmp
+                                                  na.omit(name.table[, i])]
+                mergedata[(cumsum(rows) - rows + 1)[i]:cumsum(rows)[i],] = tmp
+                mergedatadictionary[,paste(colnames(name.table)[i],"index",sep="_")]=NA
+                mergedatadictionary[,3+n+i]=sapply(name.table[,i],function(x){
+                    ifelse(is.na(x),NA,which(colnames(dataset[[i]])==x))
+                })
                 setTxtProgressBar(txtpb, (0.05+0.4*i/n))
             }
             
-            mergedatasummary = matrix(c(basename(gtfile), rows),
-                                      nrow = n, dimnames = list(basename(gtfile), c("source",
-                                                                                    "size")))
+            mergedatasummary = matrix(c(colnames(name.table), rows), nrow = n,
+                                      dimnames = list(colnames(name.table), c("source","size")))
             for (i in 1:length(name.select)) {
                 if (name.class[i] != "NA") {
                     if (name.class[i] == "numeric" | name.class[i] ==
                         "integer") {
                         if (name.class[i] == "numeric") {
-                            mergedata[, i + 1] = as.numeric(mergedata[,
-                                                                      i + 1])
+                            mergedata[, i + 1] = as.numeric(mergedata[, i + 1])
                         }
                         if (name.class[i] == "integer") {
-                            mergedata[, i + 1] = as.integer(mergedata[,
-                                                                      i + 1])
+                            mergedata[, i + 1] = as.integer(mergedata[, i + 1])
                         }
                         datasummary = matrix(NA, nrow = n, ncol = 6,
-                                             dimnames = list(basename(gtfile), paste(name.intersect[i],
-                                                                                     c("NA#s", "mean", "std", "min", "median",
-                                                                                       "max"), sep = ".")))
+                                             dimnames = list(colnames(name.table), 
+                                             paste(name.intersect[i], 
+                                             c("NA#s", "mean", "std", "min", "median", "max"),
+                                             sep = ".")))
                         for (j in 1:n) {
                             if (!is.na(name.table[i, j])) {
                                 tmpdata = dataset[[j]][, name.table[i,
@@ -1120,17 +1122,18 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     }
                     else {
                         datasummary = matrix(NA, nrow = n, ncol = 9,
-                                             dimnames = list(basename(gtfile), paste(name.intersect[i],
-                                                                                     c("NA#s", "levels", "matched_levels", "top1_level",
-                                                                                       "amount_1", "top2_level", "amount_2",
-                                                                                       "top3_level", "amount_3"), sep = ".")))
+                                             dimnames = list(colnames(name.table),
+                                             paste(name.intersect[i], 
+                                             c("NA#s", "levels", "matched_levels",
+                                             "top1_level", "amount_1",
+                                             "top2_level", "amount_2",
+                                             "top3_level", "amount_3"), sep = ".")))
                         matchedlevels = list()
                         for (j in 1:n) {
                             if (!is.na(name.table[i, j])) {
-                                if (sum(!is.na(dataset[[j]][, name.table[i,
-                                                                         j]])) > 0) {
+                                if (sum(!is.na(dataset[[j]][, name.table[i, j]])) > 0) {
                                     matchedlevels[[j]] = names(table(dataset[[j]][,
-                                                                                  name.table[i, j]], useNA = "no"))
+                                                         name.table[i, j]], useNA = "no"))
                                 }
                                 else {
                                     matchedlevels[[j]] = NA
@@ -1144,15 +1147,16 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                         mtch = intersect2(matchedlevels, matchedlevels)
                         for (j in 1:n) {
                             if (!is.na(name.table[i, j])) {
-                                tmpdata = dataset[[j]][, name.table[i,
-                                                                    j]]
+                                tmpdata = dataset[[j]][, name.table[i, j]]
                                 tmptable = sort(table(tmpdata, useNA = "no"),
                                                 decreasing = TRUE)
                                 datasummary[j, 1] = sum(is.na(tmpdata))
                                 datasummary[j, 2] = length(tmptable)
                                 datasummary[j, 3] = length(mtch$public)
-                                datasummary[j, 4] = names(tmptable)[1]
-                                datasummary[j, 5] = tmptable[1]
+                                if (length(tmptable) > 0){
+                                    datasummary[j, 4] = names(tmptable)[1]
+                                    datasummary[j, 5] = tmptable[1]
+                                }
                                 if (length(tmptable) > 1) {
                                     datasummary[j, 6] = names(tmptable)[2]
                                     datasummary[j, 7] = tmptable[2]
@@ -1164,13 +1168,13 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                             }
                             #setTxtProgressBar(txtpb, 0.45+(i-0.5)/n*0.5+j/n*0.25/n)
                         }
-                        mergedatasummary = cbind(mergedatasummary,
-                                                 datasummary)
+                        mergedatasummary = cbind(mergedatasummary, datasummary)
                     }
                 }
                 else {
-                    mergedatasummary = cbind(mergedatasummary, matrix(NA,
-                                                                      ncol = 1, nrow = n, dimnames = list(NULL, name.intersect[i])))
+                    mergedatasummary = cbind(mergedatasummary, 
+                                             matrix(NA, ncol = 1, nrow = n, 
+                                             dimnames = list(NULL, name.intersect[i])))
                 }
                 setTxtProgressBar(txtpb, 0.45+i/n*0.5)
             }
@@ -1180,10 +1184,13 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 if (regexpr("\\.csv$",gf) %in% c(-1,1)) {
                     gf = paste(gf,".csv",sep="")
                 }
-                write.csv(mergedata, file = gf, row.names = F)
+                write.csv(mergedata, file = gf, row.names = FALSE)
                 summarylocation = sub("\\.csv$", "_summary.csv", gf)
-                write.csv(mergedatasummary, file = summarylocation,
-                          row.names = F)
+                write.table(t(mergedatasummary), file = summarylocation,
+                            sep=",", col.names = FALSE)
+                dictionarylocation = sub("\\.csv$", "_dictionary.csv", gf)
+                write.csv(mergedatadictionary, file = dictionarylocation,
+                          row.names = FALSE)
                 gmessage("The files are merged!")
             }
         }
@@ -1261,9 +1268,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         tmpsimpleuniq = a$simpleuniq
         nametable = a$individual
         if (nrow(nametable) != 0) {
-            tmpname = paste("Part1-1-", 1:nrow(nametable), sep = "")
-            tmpname[1:min(9,length(tmpname))] = paste("Part1-1-0", 
-                                                1:min(9,length(tmpname)), sep = "")
+            tmpname = paste("Part1-1-", sprintf("%03d", 1:nrow(nametable)), sep = "")
             rownames(nametable) = tmpname
         }
         
@@ -1276,9 +1281,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 tmptable[, combnmatrix[, j]] = tmpintersect$individual
                 if (nrow(tmptable) != 0) {
                     tmpname = paste("Part", n - i + 1, "-", j, "-", 
-                                    1:length(tmpintersect$public), sep = "")
-                    tmpname[1:min(9,length(tmpname))] = paste("Part", n - i + 1, "-", j, "-0", 
-                                                        1:min(9,length(tmpname)), sep = "")
+                                    sprintf("%03d",1:length(tmpintersect$public)), sep = "")
                     rownames(tmptable) = tmpname
                 }
                 nametable <- rbind(nametable, tmptable)
@@ -1294,9 +1297,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             tmptable[, i] = tmpuniq[[i]]
             if (nrow(tmptable) != 0) {
                 tmpname = paste("Part", n, "-", i, "-",
-                                1:nrow(tmptable), sep = "")
-                tmpname[1:min(9,length(tmpname))] = paste("Part", n, "-", i, "-0",
-                                                    1:min(9,length(tmpname)), sep = "")
+                                sprintf("%03d",1:nrow(tmptable)), sep = "")
                 rownames(tmptable) = tmpname
             }
             nametable <- rbind(nametable, tmptable)
