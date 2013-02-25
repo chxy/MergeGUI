@@ -468,7 +468,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 mergegui_env$idx <- 1
             }
             for (i in 1:n) {
-                gt2[[i]][,] = data.frame(rowname=rownames(mergegui_env$hstry1[[mergegui_env$idx]]),mergegui_env$hstry1[[mergegui_env$idx]][, i, drop=FALSE],stringsAsFactors = FALSE)
+                gt2[[i]][,] = data.frame(namecode=rownames(mergegui_env$hstry1[[mergegui_env$idx]]),mergegui_env$hstry1[[mergegui_env$idx]][, i, drop=FALSE],stringsAsFactors = FALSE)
             }
             mergegui_env$redo.indicate <- 1
             mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
@@ -490,7 +490,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 mergegui_env$idx <- length(mergegui_env$hstry1)
             }
             for (i in 1:n) {
-                gt2[[i]][,] = data.frame(rowname=rownames(mergegui_env$hstry1[[mergegui_env$idx]]),mergegui_env$hstry1[[mergegui_env$idx]][, i, drop=FALSE],stringsAsFactors = FALSE)
+                gt2[[i]][,] = data.frame(namecode=rownames(mergegui_env$hstry1[[mergegui_env$idx]]),mergegui_env$hstry1[[mergegui_env$idx]][, i, drop=FALSE],stringsAsFactors = FALSE)
             }
             mergegui_env$gt4[,] = mergegui_env$hstry2[[mergegui_env$idx]]
             mergegui_env$gt5[,] = mergegui_env$hstry3[[mergegui_env$idx]]
@@ -502,7 +502,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             ##  reset button.                                            ##
             #####-----------------------------------------------------#####
             for (i in 1:n) {
-                gt2[[i]][,] = data.frame(rowname=rownames(nametable),nametable[, i, drop = F],stringsAsFactors = FALSE)
+                gt2[[i]][,] = data.frame(namecode=rownames(nametable),nametable[, i, drop = F],stringsAsFactors = FALSE)
             }
             mergegui_env$redo.indicate = 1
             mergegui_env$gt4[, ] = mergegui_env$hstry2[[1]]
@@ -1369,7 +1369,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         for (i in 1:n) {
             group2[[i]] = ggroup(horizontal = FALSE, container = group22,
                                  expand = T)
-            gt2[[i]] <- gtable(data.frame(rowname=rownames(nametable),nametable[, i, drop = F],stringsAsFactors = FALSE), chosencol = 2, container = group2[[i]], expand = TRUE)
+            gt2[[i]] <- gtable(data.frame(namecode=rownames(nametable),nametable[, i, drop = F],stringsAsFactors = FALSE), chosencol = 2, container = group2[[i]], expand = TRUE)
             addHandlerKeystroke(gt2[[i]], handler = function(h,...){})
             tag(gt2[[i]], "prev.idx") <- svalue(gt2[[i]], index = TRUE)
             tag(gt2[[i]], "toggle") <- FALSE
