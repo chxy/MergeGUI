@@ -976,10 +976,16 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             delete(mergegui_env$group42, mergegui_env$gt4)
             
             if (flagsym=="Show the flag symbol") {
+                alphalevel = as.numeric(svalue(text133))
+                if (is.na(alphalevel) || alphalevel<=0 || alphalevel>=1){
+                    gmessage("Invalid alpha-level. Coerce to 0.05.")
+                    svalue(text133) = 0.05
+                    alphalevel = 0.05
+                }
                 flag1 = !is.na(mergegui_env$name_intersection_panel[,-(1:3)])
                 flag2 = sapply(mergegui_env$name_intersection_panel[,-(1:3)],
                                function(avec){
-                                   as.numeric(as.character(avec))<0.05
+                                   as.numeric(as.character(avec)) <= alphalevel
                                })
                 flag = flag1 & flag2
                 newgt4 = mergegui_env$name_intersection_panel
@@ -1321,11 +1327,15 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         group11 = ggroup(horizontal = FALSE, cont = tab, label = "Preferences", expand = T)
         frame12 = gframe("Scaling of histograms",container = group11, horizontal = FALSE)
         radio121 = gradio(c("regular y scale","relative y scale"),container = frame12)
-        frame13 = gframe("Flag for variables",container = group11, horizontal = FALSE)
+        frame13 = gframe("Flag for variables",container = group11, horizontal = TRUE)
         radio131 = gradio(c("Show p-values","Show the flag symbol","Do not show p-values or flags"), container = frame13)
+        label132 = glabel('"alpha-level" = ',container=frame13)
+        text133 = gedit("0.05",container=frame13, width=10)
         if (!unit & !distn & !miss) {
             svalue(radio131) = "Do not show p-values or flags"
-            enabled(radio131) = FALSE
+            enabled(frame13) = FALSE
+            visible(label132) = FALSE
+            visible(text133) = FALSE
         } else {
             addHandlerChanged(radio131, handler=changetest)
         }
