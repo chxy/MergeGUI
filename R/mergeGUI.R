@@ -226,8 +226,12 @@ scale_rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
                 tmperror2 = c()
                 for (j in 1:length(levels(group))) {
                     tmpdat = data.frame(file=factor(group==levels(group)[j]),mergedata[,i])
-                    fit_rpart = rpart(file~., data=tmpdat, control=c(maxdepth=1))
-                    tmperror2[j] = weighted.mean(residuals(fit_rpart), 1/table(tmpdat[,1])[tmpdat[!is.na(mergedata[,i]),1]])
+                    if (any(tapply(tmpdat[,2],tmpdat[,1],function(x){all(is.na(x))}))){
+                        tmperror2[j] = NA
+                    } else {
+                        fit_rpart = rpart(file~., data=tmpdat, control=c(maxdepth=1))
+                        tmperror2[j] = weighted.mean(residuals(fit_rpart), 1/table(tmpdat[,1])[tmpdat[!is.na(mergedata[,i]),1]])
+                    }                    
                 }
                 tmperror = min(tmperror2,na.rm=TRUE)
                 res[name.class==colnames(mergedata)[i]] = round(tmperror,3)
@@ -650,8 +654,10 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                                 summarytable[[i]][2, j] = sum(is.na(tmpdata))
                                 summarytable[[i]][3, j] = length(tmptable)
                                 summarytable[[i]][4, j] = length(mtch$public)
-                                summarytable[[i]][5, j] = names(tmptable)[1]
-                                summarytable[[i]][6, j] = tmptable[1]
+                                if (length(tmptable) > 0) {
+                                    summarytable[[i]][5, j] = names(tmptable)[1]
+                                    summarytable[[i]][6, j] = tmptable[1]
+                                }
                                 if (length(tmptable) > 1) {
                                     summarytable[[i]][7, j] = names(tmptable)[2]
                                     summarytable[[i]][8, j] = tmptable[2]
@@ -917,7 +923,9 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     rownames(dictlist[[i]]) = 1:nrow(dictlist[[i]])
                     levelintersect = intersect2(dictionary[[i]],dictionary[[i]])
                     for (j in 1:n) {
-                        dictlist[[i]][1:dictlength[i, j], j] = c(levelintersect$individual[,j],levelintersect$uniq[[j]])
+                        if (dictlength[i, j]>0) {
+                            dictlist[[i]][1:dictlength[i, j], j] = c(levelintersect$individual[,j],levelintersect$uniq[[j]])
+                        }
                     }
                     colnames(dictlist[[i]]) = simplifynames(gsub('.csv','',basename(gtfile)))
                 }
