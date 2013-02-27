@@ -807,16 +807,16 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 
                 if (all(name.class %in% c("integer","numeric"))){
                     if (yscale=="regular y scale") {
-                        eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point',facets=source~.))", sep = "")))
+                        eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point',facets=source~., alpha=I(0.6)))", sep = "")))
                     } else {
-                        eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point')+facet_wrap(~source, scales = 'free', ncol = 1))", sep = "")))
+                        eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point', alpha=I(0.6))+facet_wrap(~source, scales = 'free', ncol = 1))", sep = "")))
                     }
                 } else {
                     if (all(name.class %in% c("factor","character"))){
                         if (yscale=="regular y scale") {
-                            eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point', position=position_jitter(w=0.1,h=0.1), facets=source~.))", sep = "")))
+                            eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point', position=position_jitter(w=0.2,h=0.2), facets=source~., alpha=I(0.6)))", sep = "")))
                         } else {
-                            eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point', position=position_jitter(w=0.1,h=0.1)) + facet_wrap(~source,scales='free',ncol=1))", sep = "")))
+                            eval(parse(text = paste("print(qplot(", name.intersect[1],",", name.intersect[2],",data=mergedata,geom='point', position=position_jitter(w=0.2,h=0.2), alpha=I(0.6)) + facet_wrap(~source,scales='free',ncol=1))", sep = "")))
                         }
                     } else {
                         if (yscale=="regular y scale") {
