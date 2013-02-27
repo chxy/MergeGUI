@@ -514,9 +514,9 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             mergegui_env$gt4[, ] = mergegui_env$hstry2[[1]]
             mergegui_env$gt5[, ] = mergegui_env$hstry3[[1]]
             if (mergegui_env$hstry4[[length(mergegui_env$hstry4)]]==length(mergegui_env$hstry4)) {
-                indicator1 = all(mergegui_env$hstry1[[length(mergegui_env$hstry1)]]==mergegui_env$hstry1[[1]])
-                indicator2 = all(mergegui_env$hstry2[[length(mergegui_env$hstry2)]][,1:3]==mergegui_env$hstry2[[1]][,1:3])
-                indicator3 = all(mergegui_env$hstry3[[length(mergegui_env$hstry3)]]==mergegui_env$hstry3[[1]])
+                indicator1 = all(mergegui_env$hstry1[[length(mergegui_env$hstry1)]]==mergegui_env$hstry1[[1]],na.rm=TRUE)
+                indicator2 = all(mergegui_env$hstry2[[length(mergegui_env$hstry2)]][,1:3]==mergegui_env$hstry2[[1]][,1:3],na.rm=TRUE)
+                indicator3 = all(mergegui_env$hstry3[[length(mergegui_env$hstry3)]]==mergegui_env$hstry3[[1]],na.rm=TRUE)
                 mergegui_env$idx = ifelse(all(indicator1,indicator2,indicator3),length(mergegui_env$hstry1),length(mergegui_env$hstry1)+1)
             } else {
                 mergegui_env$idx = length(mergegui_env$hstry1)+1
@@ -973,7 +973,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 if (!all(checknamepanel)){
                     mergegui_env$nameintersection <- mergegui_env$gt4[order(gt4col1),2]
                     mergegui_env$name_intersection_panel <- data.frame(mergegui_env$gt4[order(gt4col1),1:3],stringsAsFactors = FALSE)
-                    colnames(mergegui_env$name_intersection_panel) <- c("Items", "Variables", "Class")
+                    colnames(mergegui_env$name_intersection_panel) <- c("Namecode", "Variables", "Class")
                     if (unit) mergegui_env$name_intersection_panel$Unit <- scale_rpart(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
                     
                     if (distn) mergegui_env$name_intersection_panel$Dist <- scale_kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
@@ -1364,7 +1364,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         mergegui_env$hstry1[[1]] <- nametable
         
         mergegui_env$name_intersection_panel <- data.frame(
-            Items=1:length(nameintersect), 
+            Namecode=rownames(nametable), 
             Variables=nameintersect,
             Class=var.class(nametable,dataset),
             stringsAsFactors = FALSE)
@@ -1407,9 +1407,9 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     mergegui_env$hstry1[[mergegui_env$idx]] <- mergegui_env$hstry1[[mergegui_env$idx - 1]]
                     mergegui_env$hstry1[[mergegui_env$idx]][, tag(gt.tmp, "idx")] <- gt.tmp[,2]
                     if (tag(gt.tmp, "idx") == 1) {
-                        tmpgt4 = mergegui_env$gt4[mergegui_env$gt4[,1]==prev.idx, 2:3]
-                        mergegui_env$gt4[mergegui_env$gt4[,1]==prev.idx, 2:3] = mergegui_env$gt4[mergegui_env$gt4[,1]==svalue(gt.tmp, index = TRUE), 2:3]
-                        mergegui_env$gt4[mergegui_env$gt4[,1]==svalue(gt.tmp, index = TRUE), 2:3] = tmpgt4
+                        tmpgt4 = mergegui_env$gt4[mergegui_env$gt4[,1]==gt2[[i]][prev.idx,1], 2:3]
+                        mergegui_env$gt4[mergegui_env$gt4[,1]==gt2[[i]][prev.idx,1], 2:3] = mergegui_env$gt4[mergegui_env$gt4[,1]==gt2[[i]][svalue(gt.tmp, index = TRUE),1], 2:3]
+                        mergegui_env$gt4[mergegui_env$gt4[,1]==gt2[[i]][svalue(gt.tmp, index = TRUE),1], 2:3] = tmpgt4
                     }
                     mergegui_env$gt5[, 2] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 2]
                     mergegui_env$gt5[, 3] <- mergegui_env$gt4[order(mergegui_env$gt4[,1]), 3]
