@@ -960,7 +960,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                 return()
             }
             
-            gt4col1 = mergegui_env$gt4[,1]
+            gt4col1 = rownames(mergegui_env$gt4)
             if (!exists("namepanel",where=mergegui_env)) {
                 mergegui_env$namepanel = nametable
             } else {
