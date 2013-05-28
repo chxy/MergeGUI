@@ -443,6 +443,7 @@ scale_missing = function(nametable.class, dataset.class, name.class) {
 ##' @param filenames A vector of csv file names with their full paths.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @export
 ##' @examples
 ##' if (interactive()) {
 ##' MergeGUI()
