@@ -1,2 +1,10 @@
 importFrom(plyr,ddply)
 importFrom(grid,viewport)
+export(MergeGUI)
+export(intersect2)
+export(simplifynames)
+export(var.class)
+export(scale_rpart)
+export(scale_kstest)
+export(scale_missing)
+
