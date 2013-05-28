@@ -964,6 +964,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             gt4col1 = rownames(mergegui_env$gt4)
             if (!exists("namepanel",where=mergegui_env)) {
                 mergegui_env$namepanel = nametable
+                mergegui_env$name_intersection_panel[,2]=mergegui_env$gt4[gt4col1,2]
             } else {
                 checknamepanel=c()
                 for (i in 1:n) {
@@ -980,8 +981,8 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     if (distn) mergegui_env$name_intersection_panel$Dist <- scale_kstest(mergegui_env$namepanel, dataset, mergegui_env$nameintersection, mergegui_env$gt4[order(gt4col1),3])
                     if (miss) mergegui_env$name_intersection_panel$Miss <- scale_missing(mergegui_env$namepanel, dataset, mergegui_env$nameintersection)
                 }
+                mergegui_env$name_intersection_panel[,2]=mergegui_env$gt4[order(gt4col1),2]
             }
-            mergegui_env$name_intersection_panel[,2]=mergegui_env$gt4[order(gt4col1),2]
             delete(mergegui_env$group42, mergegui_env$gt4)
             
             if (flagsym=="Show the flag symbol") {
