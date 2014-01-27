@@ -215,7 +215,7 @@ scale_rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
     if (length(levels(group))==2) {
         for (i in 2:ncol(mergedata)) {
             if (!(varclass[i-1] %in% c("factor","character") & length(unique(mergedata[,i]))>10) & sum(tapply(mergedata[,i],mergedata[,1],function(x){!all(is.na(x))}))>=2) {	
-                fit_rpart = rpart(mergedata$source~mergedata[,i], control=c(maxdepth=1))
+                fit_rpart = rpart::rpart(mergedata$source~mergedata[,i], control=c(maxdepth=1))
                 tmperror = weighted.mean(residuals(fit_rpart), 1/table(group)[group[!is.na(mergedata[,i])]])
                 res[name.class==colnames(mergedata)[i]] = round(tmperror,3)
             }
@@ -229,7 +229,7 @@ scale_rpart = function(nametable.class, dataset.class, name.class,varclass=NULL)
                     if (any(tapply(tmpdat[,2],tmpdat[,1],function(x){all(is.na(x))}))){
                         tmperror2[j] = NA
                     } else {
-                        fit_rpart = rpart(file~., data=tmpdat, control=c(maxdepth=1))
+                        fit_rpart = rpart::rpart(file~., data=tmpdat, control=c(maxdepth=1))
                         tmperror2[j] = weighted.mean(residuals(fit_rpart), 1/table(tmpdat[,1])[tmpdat[!is.na(mergedata[,i]),1]])
                     }                    
                 }
@@ -440,7 +440,11 @@ scale_missing = function(nametable.class, dataset.class, name.class) {
 ##' export button will export the merged data and the numeric
 ##' summaries of the selected variables into two csv files.
 ##'
+##' @param ... names of the data frames to read
 ##' @param filenames A vector of csv file names with their full paths.
+##' @param unit whether the test of the difference among the group centers is on or off
+##' @param distn whether the test of the difference among the group distributions is on or off
+##' @param miss whether the test of the difference among the group missing patterns is on or off
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @export
@@ -690,11 +694,11 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             gbcombo441 = list()
             
             delete(mergegui_env$group43, mergegui_env$group45)
-            mergegui_env$group45 <- ggroup(cont=mergegui_env$group43,expand = TRUE, use.scrollwindow = TRUE)
+            mergegui_env$group45 <- ggroup(container=mergegui_env$group43,expand = TRUE, use.scrollwindow = TRUE)
             gbcombo44 <- glayout(container = mergegui_env$group45,expand = TRUE, use.scrollwindow = TRUE)
             
             for (i in 1:length(name.select)){
-                gbcombo44[i*2-1, 1] = glabel(names(summarytable)[i],cont=gbcombo44)
+                gbcombo44[i*2-1, 1] = glabel(names(summarytable)[i],container=gbcombo44)
                 gbcombo44[i*2, 1, expand = TRUE] = gbcombo441[[i]] = gtable(summarytable[[i]], container = gbcombo44)
             }
             
@@ -707,7 +711,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             #####---------------------------------#####
             graphics.off()
             delete(mergegui_env$group43, mergegui_env$group45)
-            mergegui_env$group45 <- ggroup(cont=mergegui_env$group43,expand = TRUE, use.scrollwindow = TRUE)
+            mergegui_env$group45 <- ggroup(container=mergegui_env$group43,expand = TRUE, use.scrollwindow = TRUE)
             gbcombo44 <- glayout(container = mergegui_env$group45,expand = TRUE, use.scrollwindow = TRUE)
             
             yscale = svalue(radio121)
@@ -869,7 +873,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
                     }
                 } else {
                     gbcombo44[1, 1, expand = TRUE] = ggraphics(container = gbcombo44, expand = TRUE)
-                    print(ggpcp(mergedata,var=names(mergedata)[2:(z+1)]) + geom_line() + facet_wrap(~source, ncol=1))
+                    print(ggpcp(mergedata,vars=names(mergedata)[2:(z+1)]) + geom_line() + facet_wrap(~source, ncol=1))
                 }
             }
         }
@@ -881,7 +885,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
             #####--------------------------------#####
             graphics.off()
             delete(mergegui_env$group43, mergegui_env$group45)
-            mergegui_env$group45 <- ggroup(cont=mergegui_env$group43,expand = TRUE, use.scrollwindow = TRUE)
+            mergegui_env$group45 <- ggroup(container=mergegui_env$group43,expand = TRUE, use.scrollwindow = TRUE)
             gbcombo44 <- glayout(container = mergegui_env$group45,expand = TRUE, use.scrollwindow = TRUE)
             gbcombo44[1, 1, expand = TRUE] = gbcombo443 = gtext(container = gbcombo44, expand = TRUE,
                                                                 use.scrollwindow = TRUE)
@@ -1249,7 +1253,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         
         for (i in 1:n) {
             dataset[[i]] <- if (length(grep("\\.csv$",gtfile[i]))) {
-                read.csv(file = gtfile[i], head = T)
+                read.csv(file = gtfile[i], header = T)
             } else { gtdata[[i]] }
             rows[i] <- nrow(dataset[[i]])
             vname[[i]] <- colnames(dataset[[i]])
@@ -1334,7 +1338,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         ##  (1) Determine the scaling way.               ##
         ##  (2) Determine whether show p-values or not.  ##
         #####-----------------------------------------#####
-        group11 = ggroup(horizontal = FALSE, cont = tab, label = "Preferences", expand = T)
+        group11 = ggroup(horizontal = FALSE, container = tab, label = "Preferences", expand = T)
         frame12 = gframe("Scaling of histograms",container = group11, horizontal = FALSE)
         radio121 = gradio(c("regular y scale","relative y scale"),container = frame12)
         frame13 = gframe("Flag for variables",container = group11, horizontal = TRUE)
@@ -1357,7 +1361,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         ##  (1) Switch the variable names in the same gtable. ##
         ##  (2) Go back or go forth or reset the matching.    ##
         #####----------------------------------------------#####
-        group21 = ggroup(horizontal = FALSE, cont = tab, label = "Matching", expand = T)
+        group21 = ggroup(horizontal = FALSE, container = tab, label = "Matching", expand = T)
         group22 = ggroup(container = group21, use.scrollwindow = TRUE, expand = T)
         group2 = list()
         gt2 <- list()
@@ -1438,7 +1442,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         ##  (2) Numeric or graphic summary.                     ##
         ##  (3) Dictionary for factor variables.                ##
         #####------------------------------------------------#####
-        group41 = ggroup(cont = tab, label = "Summary", expand = T)
+        group41 = ggroup(container = tab, label = "Summary", expand = T)
         mergegui_env$group42 <- ggroup(container = group41, use.scrollwindow = TRUE, expand = T)
         
         mergegui_env$gt4 <- gtable(mergegui_env$name_intersection_panel, multiple = T, container = mergegui_env$group42, expand = TRUE, chosencol = 2)
@@ -1483,8 +1487,8 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         gbcombo55 <- gbutton("Export the matched data", container = group53,
                              handler = watchdatafunc)
         gbcombo56 <- glabel(paste("The complete merged data have ",sum(rows)," rows and ",
-                                  length(nameintersect)," columns."),cont=group53)
-        gbcombo57 <- glabel(paste("Currently you select 0 variable."),cont=group53)
+                                  length(nameintersect)," columns."),container=group53)
+        gbcombo57 <- glabel(paste("Currently you select 0 variable."),container=group53)
         
         svalue(tab)=1
     }
@@ -1556,7 +1560,7 @@ MergeGUI = function(..., filenames=NULL, unit=TRUE, distn=TRUE, miss=TRUE) {
         rows <- rep(0, n)
         for (i in 1:n) {
             dataset[[i]] <- if (length(grep("\\.csv$",gtfile[i]))) {
-                read.csv(file = gtfile[i], head = T)
+                read.csv(file = gtfile[i], header = T)
             } else { gtdata[[i]] }
             rows[i] <- nrow(dataset[[i]])
             vname[[i]] <- colnames(dataset[[i]])

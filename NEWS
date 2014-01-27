@@ -1,0 +1,8 @@
+Changes in Version 0.2-1
+
+NEW FEATURES
+
+  - Enable to read the data frames directly;
+  - Enable to turn off any of the three tests;
+  - Enable to show part of the variable names in the matching tab;
+  - Enable to change the alpha-level for flagging the variables.

@@ -1,7 +1,3 @@
-% Preview source code
-
-%% LyX 1.6.8 created this file.  For more info, see http://www.lyx.org/.
-%% Do not edit unless you really know what you are doing.
 \documentclass[12pt]{article}
 \usepackage[T1]{fontenc}
 \usepackage[latin9]{inputenc}
@@ -10,21 +6,19 @@
 \usepackage{graphicx}
 
 \makeatletter
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
-%\VignetteIndexEntry{An Introduction to the Data Merging GUI}
+
+%\VignetteIndexEntry{MergeGUI: A Graphical User Interface for Merging Multiple Data Files in R}
 
 \makeatother
 
 \begin{document}
 
-
 \title{An Introduction to the MergeGUI Package}
 
 
-\author{Xiaoyue Cheng%
-\thanks{Email: xycheng@iastate.edu%
-} \and Dianne Cook \and Heike Hofmann\\
- Department of Statistics, Iowa State University}
+\author{Xiaoyue Cheng \thanks{Email: xycheng@iastate.edu} 
+\and Dianne Cook \and Heike Hofmann \and
+Department of Statistics \and Iowa State University}
 
 \maketitle
 
@@ -38,11 +32,10 @@ or horizontally -- merging the cases, or say, merge the IDs.
 \section{Design of GUI}
 
 Beginning with the command 
-\begin{quotation}
-\texttt{> library(MergeGUI)}
-
-\texttt{> mergeGUI()}
-\end{quotation}
+<<eval=FALSE,echo=TRUE>>=
+library(MergeGUI)
+MergeGUI()
+@
 the starting interface will show up. The following instruction will
 give a tour in this package.
 
@@ -59,10 +52,19 @@ are used in the next step.
 \includegraphics[width=0.75\textwidth]{open-windows} 
 \par\end{center}
 
+Reading the data frames from R console is also allowed. The code below
+could also give the starting window.
+<<eval=FALSE,echo=TRUE>>=
+data(iris)
+setosa=iris[iris$Species=="setosa",1:4]
+versicolor=iris[iris$Species=="versicolor",1:4]
+virginica=iris[iris$Species=="virginica",1:4]
+MergeGUI(setosa,versicolor,virginica)
+@
 
 \subsection{The Matching-ID Interface}
 
-In some situations, we have several files containing the same subjects
+Under some situations, we have several files containing the same subjects
 or experimental units, but different treatments or recording times.
 Then one of the desirable tasks is to combine those files by the subject
 ID's. In the `Combination' window, the last button is `Match by the
@@ -85,7 +87,7 @@ data into a new csv file.
 
 \subsection{The Matching-Variable Interface}
 
-This part allows the user to match the data from the different experimental
+This part allows users to match the data from the different experimental
 units that have the same variables. In the `Combination' window, the
 second button is `Match the Variables'. Clicking it will open the
 window `Matched Variables'. This window has four tabs. We can activate
@@ -94,11 +96,11 @@ one page by clicking the tab title.
 
 \subsubsection{Perferences Tab}
 
-In the preferences tab, the user can choose whether the y-scales are
-free for different data files when drawing the plots facetted by the
-files; whether the numerical p-values or the flag symbols are displayed
-in the summary tab or not. All the changes will be presented in the
-Summary tab.
+In the preferences tab, users can choose (1) whether to free the 
+y-scales for different data files when facetting the plots by file; 
+(2) whether to display the numerical p-values or the flag symbols
+in the summary tab; (3) which part of the variables to show. 
+All the changes will be presented in the Summary tab.
 
 \begin{center}
 \includegraphics[height=0.3\paperheight]{preferences-windows}
